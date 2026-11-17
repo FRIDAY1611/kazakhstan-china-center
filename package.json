@@ -1,0 +1,12 @@
+{
+  "name": "chk-service-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "中哈政务商务服务中心官网（静态单页，国内可访问）",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

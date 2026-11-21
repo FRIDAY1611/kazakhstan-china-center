@@ -5,6 +5,7 @@ import { fetchFeeds, loadMockSources } from './sources.mjs';
 import { generateArticle, loadMockArticle, validateArticle, resolveProvider } from './llm.mjs';
 import { assignThemeBuckets, selectDailyThemes, primaryThemeForPost } from './themes.mjs';
 import { coverPath, coverAlt, renderCoverSvg } from './cover.mjs';
+import { emphasizeArticleHtml } from './emphasis.mjs';
 import {
   loadLayout, renderArticle, updateInsightsPage,
   renderArchive, renderRss, updateSitemap, postPath, formatDateCN, esc,
@@ -104,6 +105,14 @@ function injectCover(root, post, opts) {
   write(root, postPath(post), html, opts);
 }
 
+function emphasizeArticle(root, post, opts) {
+  const file = path.join(root, postPath(post));
+  if (!existsSync(file)) return;
+  const html = readFileSync(file, 'utf8');
+  const next = emphasizeArticleHtml(html);
+  if (next !== html) write(root, postPath(post), next, opts);
+}
+
 function titleKey(title) {
   return String(title).toLowerCase().replace(/[\s\-–—|·:：,，.。!！?？"'“”‘’()（）【】[\]]+/g, '');
 }
@@ -182,7 +191,10 @@ async function main() {
     console.log(`  共 ${posts.length} 篇`);
     console.log('2/2 补齐封面、渲染归档、RSS、资讯列表与站点地图');
     prepareCovers(opts.root, posts, opts);
-    for (const post of posts) injectCover(opts.root, post, opts);
+    for (const post of posts) {
+      injectCover(opts.root, post, opts);
+      emphasizeArticle(opts.root, post, opts);
+    }
     const layout = loadLayout(opts.root);
     renderSite(opts.root, posts, layout, date, opts);
     console.log(`\n完成：${SITE.origin}/insights/archive.html`);
@@ -193,7 +205,10 @@ async function main() {
   if (existingDaily.length >= DAILY_TARGET && !opts.force) {
     console.log(`今天已有 ${existingDaily.length} 篇简报，跳过（使用 --force 可重写当天主题稿）。`);
     prepareCovers(opts.root, manifest.posts, opts);
-    for (const post of manifest.posts) injectCover(opts.root, post, opts);
+    for (const post of manifest.posts) {
+      injectCover(opts.root, post, opts);
+      emphasizeArticle(opts.root, post, opts);
+    }
     write(opts.root, 'news/manifest.json', `${JSON.stringify({ posts: sortPosts(manifest.posts) }, null, 2)}\n`, opts);
     return;
   }
@@ -257,7 +272,10 @@ async function main() {
 
   console.log('3/4 生成封面、渲染页面与订阅文件');
   prepareCovers(opts.root, posts, opts);
-  for (const post of posts) injectCover(opts.root, post, opts);
+  for (const post of posts) {
+    injectCover(opts.root, post, opts);
+    emphasizeArticle(opts.root, post, opts);
+  }
 
   const layout = loadLayout(opts.root);
   for (const { post, content } of generated) {

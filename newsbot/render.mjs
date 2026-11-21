@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { SITE, THEME_BY_ID } from './config.mjs';
+import { createEmphasisState, emphasizeHtml } from './emphasis.mjs';
 
 export const esc = (value = '') => String(value)
   .replace(/&/g, '&amp;')
@@ -118,8 +119,8 @@ ${JSON.stringify(crumbs, null, 2)}
 <link rel="stylesheet" href="../pages.css" />`;
 }
 
-function cite(text, ids) {
-  return esc(text).replace(/\[(\d{1,2})\]/g, (match, num) => {
+function cite(text, ids, emState) {
+  return emphasizeHtml(esc(text), emState, 2).html.replace(/\[(\d{1,2})\]/g, (match, num) => {
     const id = Number(num);
     return ids.has(id)
       ? `<sup class="src-ref"><a href="#src-${id}" aria-label="查看来源 ${id}">[${id}]</a></sup>`
@@ -150,18 +151,20 @@ export function renderArticle({ post, content, sources, layout }) {
       <img src="${esc(articleCover)}" alt="${esc(coverAlt)}" width="1200" height="630" loading="eager" decoding="async" />
       <figcaption><span>${esc(themeLabel || kind)} · 编辑部制图</span><span>${formatDateCN(post.date)}</span></figcaption>
     </figure>` : '';
+  const emState = createEmphasisState();
+  const lead = emphasizeHtml(esc(content.dek), emState, 2).html;
 
   const keyPoints = content.key_points
-    .map((p) => `<li>${cite(p, ids)}</li>`)
+    .map((p) => `<li>${cite(p, ids, emState)}</li>`)
     .join('\n');
 
   const sections = content.sections.map((sec) => {
-    const paras = sec.paragraphs.map((p) => `<p>${cite(p, ids)}</p>`).join('\n');
+    const paras = sec.paragraphs.map((p) => `<p>${cite(p, ids, emState)}</p>`).join('\n');
     return `<h2>${esc(sec.heading)}</h2>\n${paras}`;
   }).join('\n\n');
 
   const implications = content.implications
-    .map((p) => `<li>${cite(p, ids)}</li>`)
+    .map((p) => `<li>${cite(p, ids, emState)}</li>`)
     .join('\n');
 
   const sourceItems = citedSources.map((s) => {
@@ -185,7 +188,7 @@ export function renderArticle({ post, content, sources, layout }) {
 
 <article class="wrap">
   <div class="prose">
-    <p class="brief-lead">${esc(content.dek)}</p>
+    <p class="brief-lead">${lead}</p>
 ${coverBlock}
 
     <div class="brief-points">
@@ -268,7 +271,7 @@ export function renderPostList(posts, limit = 10, hrefBase = 'insights/', coverP
     <div class="post__text">
       ${postKind(post)}
       <h2>${esc(post.title)}</h2>
-      <p>${esc(post.summary)}</p>
+      <p>${emphasizeHtml(esc(post.summary), createEmphasisState(), 1).html}</p>
     </div>
   </div>
   <span class="arrow">→</span>

@@ -240,6 +240,7 @@ h1{ font-weight:600; letter-spacing:-.028em; }
 .post__thumb{ flex:0 0 150px; width:150px; height:84px; object-fit:cover; display:block; border-radius:10px; border:1px solid var(--line); background:linear-gradient(135deg,#162233,#344A60); }
 .post h2{ font-size:20px; font-weight:600; letter-spacing:-.01em; line-height:1.5; }
 .post p{ margin:8px 0 0; font-size:14px; line-height:1.8; color:var(--t2); max-width:640px; }
+.post p strong{ color:var(--t1); font-weight:700; }
 .post .arrow{ font-size:18px; color:var(--t3); }
 .post__kind{ display:inline-block; margin-bottom:7px; font-size:11px; letter-spacing:.1em; color:var(--gold); font-weight:600; }
 .post-more{ margin-top:36px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
@@ -258,6 +259,7 @@ h1{ font-weight:600; letter-spacing:-.028em; }
 .prose ul,.prose ol{ margin:0 0 22px; padding-left:22px; }
 .prose li{ margin-bottom:8px; }
 .prose strong{ color:var(--t1); font-weight:600; }
+.prose strong.kw{ font-weight:700; }
 .prose blockquote{ margin:28px 0; padding:18px 24px; border-left:2px solid var(--gold); background:rgba(192,163,116,.06); font-size:15px; color:var(--t2); }
 .prose table{ width:100%; border-collapse:collapse; margin:26px 0; font-size:14.5px; }
 .prose th,.prose td{ text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; }

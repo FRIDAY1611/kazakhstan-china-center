@@ -1,0 +1,16 @@
+{
+  "posts": [
+    {
+      "slug": "aifc-vs-local-company",
+      "title": "AIFC 架构还是本地公司？先回答这五个问题",
+      "summary": "适用法律、语言、银行开户、税务与业务范围——两种主体路径的差异，以及什么时候该找专业顾问做架构评估。",
+      "date": "2026-11-22",
+      "kind": "guide",
+      "tags": [
+        "政策与监管",
+        "落地观察"
+      ],
+      "url": "insights/aifc-vs-local-company.html"
+    }
+  ]
+}

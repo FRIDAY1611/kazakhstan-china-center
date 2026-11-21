@@ -1,0 +1,66 @@
+[
+  {
+    "source": "测试来源 · Kursiv",
+    "lang": "ru",
+    "published": "2026-11-21T09:20:00+05:00",
+    "title": "哈萨克斯坦拟扩大过境运输走廊，重点连接中国西部口岸",
+    "summary": "交通部门表示，将提升霍尔果斯与阿拉山口方向的铁路换装能力，并简化过境货物单证流程。相关措施计划分阶段实施。",
+    "url": "https://example.com/fixture/transit-corridor"
+  },
+  {
+    "source": "测试来源 · Tengrinews",
+    "lang": "ru",
+    "published": "2026-11-21T11:05:00+05:00",
+    "title": "阿斯塔纳公布新一轮工业园区招商条件",
+    "summary": "园区管理方公布土地租赁、基础设施接入和本地用工要求，优先面向制造业与农产品加工项目。申请企业需提交投资计划与资金来源说明。",
+    "url": "https://example.com/fixture/industrial-park"
+  },
+  {
+    "source": "测试来源 · Akorda",
+    "lang": "ru",
+    "published": "2026-11-20T16:40:00+05:00",
+    "title": "总统要求简化外资项目审批流程",
+    "summary": "政府会议提出压缩许可环节、建立跨部门协调机制，并要求在年底前提交实施细则。会议同时强调对本地就业和供应链的带动作用。",
+    "url": "https://example.com/fixture/approval-process"
+  },
+  {
+    "source": "测试来源 · Google News",
+    "lang": "zh",
+    "published": "2026-11-21T08:10:00+08:00",
+    "title": "中哈企业签署农产品与物流合作项目",
+    "summary": "双方企业在粮油加工、冷链仓储和跨境物流领域签署多项合作协议，具体金额与建设周期未在公开报道中披露。",
+    "url": "https://example.com/fixture/agri-logistics"
+  },
+  {
+    "source": "测试来源 · 人民网",
+    "lang": "zh",
+    "published": "2026-11-20T20:30:00+08:00",
+    "title": "中亚班列开行量保持增长",
+    "summary": "铁路部门数据显示，中亚方向班列开行量同比增长，主要货类包括机电产品、汽车配件和日用消费品。报道未给出全年预测。",
+    "url": "https://example.com/fixture/rail-freight"
+  },
+  {
+    "source": "测试来源 · Google News",
+    "lang": "en",
+    "published": "2026-11-21T07:15:00+05:00",
+    "title": "Kazakhstan fintech sector sees new payment licensing rules",
+    "summary": "The regulator outlined new licensing requirements for payment service providers, covering capital, reporting and consumer protection. Implementation dates and transition periods are still to be confirmed.",
+    "url": "https://example.com/fixture/fintech-rules"
+  },
+  {
+    "source": "测试来源 · 中国新闻网",
+    "lang": "zh",
+    "published": "2026-11-19T18:00:00+08:00",
+    "title": "上合组织框架下区域合作会议举行",
+    "summary": "会议讨论贸易便利化、口岸通关和中小企业合作。与会代表提出建立信息共享机制，具体项目清单尚未公布。",
+    "url": "https://example.com/fixture/sco-meeting"
+  },
+  {
+    "source": "测试来源 · Kursiv",
+    "lang": "ru",
+    "published": "2026-11-20T10:45:00+05:00",
+    "title": "阿拉木图商业地产租金出现分化",
+    "summary": "市场报告显示，核心商圈写字楼租金保持稳定，外围区域空置率上升。仓储物业需求继续增长，但可用面积有限。",
+    "url": "https://example.com/fixture/real-estate"
+  }
+]

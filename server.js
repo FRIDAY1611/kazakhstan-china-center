@@ -281,6 +281,7 @@ const server = http.createServer((req, res) => {
   const rel = path.relative(ROOT, filePath).split(path.sep).join('/');
   const blocked = BLOCKED_FILES.has(rel)
     || rel === 'data' || rel.startsWith('data/')
+    || rel === 'newsbot' || rel.startsWith('newsbot/')
     || rel.split('/').some((seg) => seg.startsWith('.'))
     || /\.(mjs|log|jsonl)$/i.test(rel);
   if (blocked) {

@@ -10,6 +10,8 @@ services.html                    核心业务（六大模块的交付内容、�
 cases.html                       成功案例（结构化：背景 / 执行 / 结果）
 about.html                       关于我们（主体资质、团队构成、服务准则）
 insights.html                    资讯（文章列表、栏目规划）
+insights/archive.html            资讯归档（按月份分组，自动生成）
+insights.xml                     RSS 订阅（自动生成）
 insights/aifc-vs-local-company.html   文章：AIFC 架构与本地公司选择
 faq.html                         常见问题（25 条，按主题分组 + FAQPage 结构化数据）
 privacy.html                     隐私政策
@@ -30,6 +32,42 @@ ru/services.html                 俄文服务页（对应 services.html）
 - 结构化数据：首页 ProfessionalService；内页 BreadcrumbList；服务页与 faq.html 为 FAQPage；文章页 Article。
 - 中英俄三语：中文页导航含 `EN` / `РУ` 切换，英文页（`/en/`）含 `中文` / `РУ`，俄文页（`/ru/`）含 `中文` / `EN`；对应页面互相声明 `hreflang`（zh-CN / en / ru / x-default），并在 sitemap 中标注 alternate。
 - 英文、俄文版目前覆盖首页与服务页；导航中的案例/关于/资讯/隐私仍指向中文页。
+
+## 资讯自动发布（每日中亚简报）
+
+每天北京时间 08:17（UTC 00:17），GitHub Actions 自动执行 `newsbot/run.mjs`：
+
+1. 抓取哈萨克斯坦与中亚的公开 RSS（Google News、Kursiv、Tengrinews、Akorda、Astana Times、人民网、中新网等）；
+2. 按经济/投资/物流/政策相关度过滤、去重，限定最近 72 小时；
+3. 调用大模型按固定编辑规范写成中文简报，强制标注来源编号并做成稿校验；
+4. 生成文章页、更新资讯列表、归档页、RSS 与站点地图；
+5. 有变更时自动提交并 push，Hostinger 随即自动部署。
+
+### 一次性配置
+
+在 GitHub 仓库 `FRIDAY1611/kazakhstan-china-center` 的
+**Settings → Secrets and variables → Actions → New repository secret** 添加以下任一密钥：
+
+- `DEEPSEEK_API_KEY`（推荐，`deepseek-chat`，成本低）
+- `ANTHROPIC_API_KEY`（`claude-sonnet-5`）
+- `OPENAI_API_KEY`（`gpt-4o-mini`）
+
+可选仓库变量（Variables 标签页）：
+
+- `NEWS_PROVIDER`：`deepseek` / `anthropic` / `openai`，未设置时按上面的密钥自动选择
+- `NEWS_MODEL`：覆盖默认模型
+- `OPENAI_BASE_URL`：使用 OpenAI 兼容网关时设置
+
+未配置任何密钥时，定时任务会正常结束并跳过生成，不会报错或发布空稿。
+
+### 手动操作
+
+- GitHub → Actions → `Daily Central Asia Brief` → Run workflow，可勾选 `force` 重写当天简报。
+- 本地预览生成：`node newsbot/run.mjs --mock`
+- 仅按 `news/manifest.json` 重建列表/归档/RSS/站点地图：`node newsbot/run.mjs --render-only`
+- 重新生成当天：`node newsbot/run.mjs --force`
+
+`news/manifest.json` 是已发布文章的清单，请勿手工删除条目；文章正文按日期保存在 `insights/`。
 
 ## 部署（Hostinger Node.js + Git 自动部署）
 

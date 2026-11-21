@@ -4,7 +4,9 @@
   "private": true,
   "description": "中哈政务商务服务中心官网（静态单页，国内可访问）",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "news": "node newsbot/run.mjs",
+    "news:render": "node newsbot/run.mjs --render-only"
   },
   "engines": {
     "node": ">=18"

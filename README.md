@@ -12,6 +12,7 @@ about.html                       关于我们（主体资质、团队构成、�
 insights.html                    洞察（文章列表、栏目规划）
 insights/aifc-vs-local-company.html   文章：AIFC 架构与本地公司选择
 privacy.html                     隐私政策
+404.html                         404 页面（由 server.js 在文件不存在时返回 404 状态）
 ```
 
 ## 技术说明

@@ -1,11 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { SITE } from './config.mjs';
+import { SITE, DAILY_TARGET } from './config.mjs';
 import { fetchFeeds, loadMockSources } from './sources.mjs';
 import { generateArticle, loadMockArticle, validateArticle, resolveProvider } from './llm.mjs';
+import { assignThemeBuckets, selectDailyThemes, primaryThemeForPost } from './themes.mjs';
+import { coverPath, coverAlt, renderCoverSvg } from './cover.mjs';
 import {
   loadLayout, renderArticle, updateInsightsPage,
-  renderArchive, renderRss, updateSitemap, postPath, formatDateCN,
+  renderArchive, renderRss, updateSitemap, postPath, formatDateCN, esc,
 } from './render.mjs';
 
 const EVERGREEN = {
@@ -66,6 +68,99 @@ function write(root, rel, content, { dry }) {
   return true;
 }
 
+function prepareCovers(root, posts, opts) {
+  for (const post of posts) {
+    if (!post.cover) post.cover = coverPath(post);
+    if (!post.coverAlt) post.coverAlt = coverAlt(post);
+    if (post.cover.startsWith('insights/covers/')) {
+      write(root, post.cover, renderCoverSvg(post), opts);
+    }
+  }
+}
+
+function injectCover(root, post, opts) {
+  if (!post.cover) return;
+  const file = path.join(root, postPath(post));
+  if (!existsSync(file)) return;
+  let html = readFileSync(file, 'utf8');
+  if (html.includes('class="article-cover"')) return;
+
+  const src = /^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, '');
+  const theme = post.kind === 'guide' ? '落地观察' : (primaryThemeForPost(post)?.label || '资讯');
+  const alt = post.coverAlt || `${theme}封面：${post.title}`;
+  const figure = `<figure class="article-cover">
+      <img src="${esc(src)}" alt="${esc(alt)}" width="1200" height="630" loading="eager" decoding="async" />
+      <figcaption><span>${esc(theme)} · 编辑部制图</span><span>${formatDateCN(post.date)}</span></figcaption>
+    </figure>`;
+
+  const lead = /(<p class="brief-lead">[\s\S]*?<\/p>)/;
+  if (lead.test(html)) {
+    html = html.replace(lead, `$1\n\n    ${figure}`);
+  } else if (html.includes('<div class="prose">')) {
+    html = html.replace(/(<div class="prose">)/, `$1\n    ${figure}`);
+  } else {
+    return;
+  }
+  write(root, postPath(post), html, opts);
+}
+
+function titleKey(title) {
+  return String(title).toLowerCase().replace(/[\s\-–—|·:：,，.。!！?？"'“”‘’()（）【】[\]]+/g, '');
+}
+
+function makePost(theme, content, date) {
+  const slug = `${date}-${theme.id}`;
+  return {
+    slug,
+    title: content.title,
+    summary: content.summary,
+    date,
+    kind: 'daily',
+    theme: theme.id,
+    tags: [...new Set([theme.tag, ...content.tags])].slice(0, 3),
+    url: `insights/${slug}.html`,
+  };
+}
+
+async function generateTheme(theme, sources, dateLabel, opts, allSources) {
+  if (opts.mock) {
+    const content = validateArticle(loadMockArticle(opts.root), allSources);
+    content.title = `${content.title}｜${theme.label}`;
+    content.tags = [...new Set([theme.tag, ...content.tags])].slice(0, 3);
+    return content;
+  }
+
+  let last;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const { raw } = await generateArticle(sources, dateLabel, { theme, log: console.log });
+      return validateArticle(raw, sources);
+    } catch (err) {
+      last = err;
+      const retriable = /成稿校验未通过|模型未返回 JSON/.test(err.message);
+      console.log(`  ${theme.label} 第 ${attempt} 次成稿未通过：${err.message}`);
+      if (!retriable || attempt === 2) break;
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
+  throw last;
+}
+
+function renderSite(root, posts, layout, date, opts) {
+  const archiveHtml = renderArchive(posts, layout);
+  const rss = renderRss(posts);
+  const insightsFile = path.join(root, 'insights.html');
+  const insightsHtml = updateInsightsPage(readFileSync(insightsFile, 'utf8'), posts);
+  const sitemapFile = path.join(root, 'sitemap.xml');
+  const sitemap = updateSitemap(readFileSync(sitemapFile, 'utf8'), posts, date);
+
+  write(root, 'insights/archive.html', archiveHtml, opts);
+  write(root, 'insights.xml', rss, opts);
+  write(root, 'insights.html', insightsHtml, opts);
+  write(root, 'sitemap.xml', sitemap, opts);
+  write(root, 'news/manifest.json', `${JSON.stringify({ posts }, null, 2)}\n`, opts);
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
@@ -76,7 +171,7 @@ async function main() {
 
   const date = opts.date || todayInShanghai();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`日期格式错误：${date}`);
-  console.log(`\n=== ${SITE.name} · 每日中亚简报 · ${date} ===`);
+  console.log(`\n=== ${SITE.name} · 每日中亚资讯（每天 ${DAILY_TARGET} 篇）· ${date} ===`);
 
   const manifest = loadManifest(opts.root);
 
@@ -84,30 +179,21 @@ async function main() {
     const posts = sortPosts(manifest.posts);
     console.log('1/2 读取已发布的资讯清单');
     console.log(`  共 ${posts.length} 篇`);
-    console.log('2/2 渲染归档、RSS、资讯列表与站点地图');
+    console.log('2/2 补齐封面、渲染归档、RSS、资讯列表与站点地图');
+    prepareCovers(opts.root, posts, opts);
+    for (const post of posts) injectCover(opts.root, post, opts);
     const layout = loadLayout(opts.root);
-    const archiveHtml = renderArchive(posts, layout);
-    const rss = renderRss(posts);
-    const insightsFile = path.join(opts.root, 'insights.html');
-    const insightsHtml = updateInsightsPage(readFileSync(insightsFile, 'utf8'), posts);
-    const sitemapFile = path.join(opts.root, 'sitemap.xml');
-    const sitemap = updateSitemap(readFileSync(sitemapFile, 'utf8'), posts, date);
-
-    write(opts.root, 'insights/archive.html', archiveHtml, opts);
-    write(opts.root, 'insights.xml', rss, opts);
-    write(opts.root, 'insights.html', insightsHtml, opts);
-    write(opts.root, 'sitemap.xml', sitemap, opts);
-    const manifestFile = path.join(opts.root, 'news', 'manifest.json');
-    if (!existsSync(manifestFile)) {
-      write(opts.root, 'news/manifest.json', `${JSON.stringify({ posts }, null, 2)}\n`, opts);
-    }
+    renderSite(opts.root, posts, layout, date, opts);
     console.log(`\n完成：${SITE.origin}/insights/archive.html`);
     return;
   }
 
-  const existing = manifest.posts.find((p) => p.kind === 'daily' && p.date === date);
-  if (existing && !opts.force) {
-    console.log(`今天已有简报《${existing.title}》，跳过（使用 --force 可重写）。`);
+  const existingDaily = manifest.posts.filter((p) => p.kind === 'daily' && p.date === date);
+  if (existingDaily.length >= DAILY_TARGET && !opts.force) {
+    console.log(`今天已有 ${existingDaily.length} 篇简报，跳过（使用 --force 可重写当天主题稿）。`);
+    prepareCovers(opts.root, manifest.posts, opts);
+    for (const post of manifest.posts) injectCover(opts.root, post, opts);
+    write(opts.root, 'news/manifest.json', `${JSON.stringify({ posts: sortPosts(manifest.posts) }, null, 2)}\n`, opts);
     return;
   }
 
@@ -122,61 +208,66 @@ async function main() {
   if (!sources.length) throw new Error('本次没有获取到任何来源，终止发布以免生成空稿');
   console.log(`  可用来源：${sources.length} 条`);
 
-  console.log('2/4 生成与校验成稿');
-  let content;
-  if (opts.mock) {
-    content = validateArticle(loadMockArticle(opts.root), sources);
-  } else {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        const { raw } = await generateArticle(sources, formatDateCN(date), { log: console.log });
-        content = validateArticle(raw, sources);
-        break;
-      } catch (err) {
-        const retriable = /成稿校验未通过|模型未返回 JSON/.test(err.message);
-        console.log(`  第 ${attempt} 次成稿未通过：${err.message}`);
-        if (!retriable || attempt === 2) throw err;
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-    }
+  const buckets = assignThemeBuckets(sources);
+  const chosen = selectDailyThemes({ existingDaily, buckets, force: opts.force });
+  if (!chosen.length) {
+    console.log('今天的目标主题稿已齐，跳过生成。');
+    return;
   }
-  console.log(`  标题：${content.title}`);
-  console.log(`  引用来源：${content.cited_source_ids.join('、')}`);
+  console.log(`  本期选择 ${chosen.length} 个栏目：${chosen.map((t) => t.label).join('、')}`);
+  for (const theme of chosen) {
+    console.log(`  ${theme.label}：${buckets[theme.id].length} 条来源`);
+  }
 
-  const slug = `${date}-central-asia-brief`;
-  const post = {
-    slug,
-    title: content.title,
-    summary: content.summary,
-    date,
-    kind: 'daily',
-    tags: content.tags,
-    url: `insights/${slug}.html`,
-  };
+  console.log('2/4 生成与校验成稿');
+  const results = await Promise.allSettled(chosen.map((theme) => (
+    generateTheme(theme, buckets[theme.id], formatDateCN(date), opts, sources)
+  )));
+
+  const contents = [];
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      contents.push({ theme: chosen[i], content: result.value });
+    } else {
+      console.log(`  ${chosen[i].label} 生成失败：${result.reason?.message || result.reason}`);
+    }
+  });
+  if (!contents.length) throw new Error('本期没有任何一篇成稿通过校验，终止发布');
+  if (contents.length < chosen.length) {
+    console.log(`  警告：本期仅 ${contents.length}/${chosen.length} 篇成功，缺失栏目将在下次运行时补齐。`);
+  }
+
+  const usedTitles = new Set(existingDaily.map((p) => titleKey(p.title)));
+  const generated = contents.map(({ theme, content }) => {
+    let title = content.title;
+    if (usedTitles.has(titleKey(title))) title = `${title}｜${theme.label}`;
+    usedTitles.add(titleKey(title));
+    content.title = title;
+    const post = makePost(theme, content, date);
+    console.log(`  ${theme.label}：${content.title}（引用 ${content.cited_source_ids.join('、')}）`);
+    return { post, content };
+  });
+
+  const newSlugs = new Set(generated.map(({ post }) => post.slug));
   const posts = sortPosts([
-    post,
-    ...manifest.posts.filter((p) => !(p.kind === 'daily' && p.date === date)),
+    ...generated.map(({ post }) => post),
+    ...manifest.posts.filter((p) => !newSlugs.has(p.slug)),
   ]);
 
-  console.log('3/4 渲染页面与订阅文件');
+  console.log('3/4 生成封面、渲染页面与订阅文件');
+  prepareCovers(opts.root, posts, opts);
+  for (const post of posts) injectCover(opts.root, post, opts);
+
   const layout = loadLayout(opts.root);
-  const articleHtml = renderArticle({ post, content, sources, layout });
-  const archiveHtml = renderArchive(posts, layout);
-  const rss = renderRss(posts);
-  const insightsFile = path.join(opts.root, 'insights.html');
-  const insightsHtml = updateInsightsPage(readFileSync(insightsFile, 'utf8'), posts);
-  const sitemapFile = path.join(opts.root, 'sitemap.xml');
-  const sitemap = updateSitemap(readFileSync(sitemapFile, 'utf8'), posts, date);
+  for (const { post, content } of generated) {
+    write(opts.root, postPath(post), renderArticle({ post, content, sources, layout }), opts);
+  }
+  renderSite(opts.root, posts, layout, date, opts);
 
-  console.log('4/4 写入文件');
-  write(opts.root, postPath(post), articleHtml, opts);
-  write(opts.root, 'insights/archive.html', archiveHtml, opts);
-  write(opts.root, 'insights.xml', rss, opts);
-  write(opts.root, 'insights.html', insightsHtml, opts);
-  write(opts.root, 'sitemap.xml', sitemap, opts);
-  write(opts.root, 'news/manifest.json', `${JSON.stringify({ posts }, null, 2)}\n`, opts);
-
-  console.log(`\n完成：${SITE.origin}/${postPath(post)}`);
+  console.log('4/4 完成');
+  for (const { post } of generated) {
+    console.log(`  ${SITE.origin}/${postPath(post)}`);
+  }
 }
 
 main().catch((err) => {

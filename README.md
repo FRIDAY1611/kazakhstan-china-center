@@ -33,15 +33,19 @@ ru/services.html                 俄文服务页（对应 services.html）
 - 中英俄三语：中文页导航含 `EN` / `РУ` 切换，英文页（`/en/`）含 `中文` / `РУ`，俄文页（`/ru/`）含 `中文` / `EN`；对应页面互相声明 `hreflang`（zh-CN / en / ru / x-default），并在 sitemap 中标注 alternate。
 - 英文、俄文版目前覆盖首页与服务页；导航中的案例/关于/资讯/隐私仍指向中文页。
 
-## 资讯自动发布（每日中亚简报）
+## 资讯自动发布（每日三篇中亚简报）
 
 每天北京时间 08:17（UTC 00:17），GitHub Actions 自动执行 `newsbot/run.mjs`：
 
 1. 抓取哈萨克斯坦与中亚的公开 RSS（Google News、Kursiv、Tengrinews、Akorda、Astana Times、人民网、中新网等）；
 2. 按经济/投资/物流/政策相关度过滤、去重，限定最近 72 小时；
-3. 调用大模型按固定编辑规范写成中文简报，强制标注来源编号并做成稿校验；
-4. 生成文章页、更新资讯列表、归档页、RSS 与站点地图；
-5. 有变更时自动提交并 push，Hostinger 随即自动部署。
+3. 把来源分配到政策与监管、市场与产业、中哈合作、金融与物流四个主题，自动选取当天最合适的 3 个主题；
+4. 每个主题独立调用大模型成稿，强制标注来源编号并逐篇做成稿校验，避免三篇互相重复；
+5. 为每篇文章生成品牌化 SVG 封面，接入文章头图、列表缩略图与 RSS enclosure；正文要点改为卡片式版式；
+6. 生成文章页、更新资讯列表、归档页、RSS 与站点地图；
+7. 有变更时自动提交并 push，Hostinger 随即自动部署。
+
+封面由编辑部自动生成的抽象品牌视觉，不直接抓取新闻社图片，规避版权、防盗链和图片失效问题；文件位于 `insights/covers/`，会随文章一起提交。
 
 ### 一次性配置
 
@@ -62,12 +66,12 @@ ru/services.html                 俄文服务页（对应 services.html）
 
 ### 手动操作
 
-- GitHub → Actions → `Daily Central Asia Brief` → Run workflow，可勾选 `force` 重写当天简报。
+- GitHub → Actions → `Daily Central Asia Brief` → Run workflow，可勾选 `force` 重写当天已有的主题稿。
 - 本地预览生成：`node newsbot/run.mjs --mock`
 - 仅按 `news/manifest.json` 重建列表/归档/RSS/站点地图：`node newsbot/run.mjs --render-only`
-- 重新生成当天：`node newsbot/run.mjs --force`
+- 重新生成当天主题稿：`node newsbot/run.mjs --force`
 
-`news/manifest.json` 是已发布文章的清单，请勿手工删除条目；文章正文按日期保存在 `insights/`。
+`news/manifest.json` 是已发布文章的清单，请勿手工删除条目；文章正文按日期保存在 `insights/`。同日不足 3 篇时，下一次运行会自动补齐缺失主题；不会删除已发布的历史文章。
 
 ## 部署（Hostinger Node.js + Git 自动部署）
 

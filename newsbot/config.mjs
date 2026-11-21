@@ -89,6 +89,93 @@ export const FEEDS = [
 
 export const WINDOW_HOURS = 72;
 export const MAX_ITEMS = 50;
+export const DAILY_TARGET = 3;
+
+export const THEMES = [
+  {
+    id: 'policy',
+    label: '政策与监管',
+    short: '政策',
+    tag: '政策与监管',
+    priority: 1,
+    focus: '哈萨克斯坦及中亚的政策、法规、税制、监管、政府会议与官方表态，重点解释变化对中国企业准入、成本和合规的影响。',
+    keywords: [
+      '政策', '监管', '法规', '法案', '税', '关税', '税率', '总统', '政府', '议会',
+      '马吉利斯', '参议院', '部长', '总理', '法令', '总统令', '改革', '补贴', '许可',
+      '配额', '制裁', '出口管制', '劳动法', '签证', '移民', '环保', '标准', '认证',
+      'policy', 'regulation', 'regulator', 'law', 'bill', 'tax', 'tariff', 'president',
+      'government', 'parliament', 'ministry', 'minister', 'decree', 'reform', 'subsidy',
+      'permit', 'license', 'quota', 'sanction', 'labor', 'visa', 'immigration',
+      'standard', 'certification',
+      'политик', 'регулир', 'закон', 'налог', 'тариф', 'президент', 'правительств',
+      'парламент', 'мажилис', 'сенат', 'министр', 'указ', 'реформ', 'субсиди',
+      'лиценз', 'квот', 'санкц', 'труд', 'виз', 'миграц', 'стандарт', 'сертификац',
+    ],
+  },
+  {
+    id: 'market',
+    label: '市场与产业',
+    short: '市场',
+    tag: '市场与产业',
+    priority: 2,
+    focus: '哈萨克斯坦及中亚的经济、产业、农业、能源、矿业、制造、出口、投资、价格与企业动态，优先写有具体数字和交易信号的变化。',
+    keywords: [
+      '经济', '市场', '农业', '农产品', '能源', '石油', '天然气', '铀', '矿业', '金属',
+      '制造', '工业', '投资', '出口', '进口', '贸易', '企业', '公司', '价格', '通胀',
+      'gdp', '增长', '产值', '加工', '食品', '畜牧', '小麦', '纺织', '汽车', '建材',
+      'economy', 'market', 'agriculture', 'agro', 'farm', 'energy', 'oil', 'gas',
+      'uranium', 'mining', 'metal', 'manufacturing', 'industry', 'investment', 'export',
+      'import', 'trade', 'company', 'business', 'price', 'inflation', 'growth', 'output',
+      'processing', 'food', 'livestock', 'wheat',
+      'эконом', 'рынок', 'сельск', 'агро', 'энерг', 'нефт', 'газ', 'уран', 'горн',
+      'металл', 'производств', 'промышлен', 'инвест', 'экспорт', 'импорт', 'торгов',
+      'компани', 'бизнес', 'цен', 'инфляц', 'ввп', 'рост', 'переработ', 'продовольств',
+      'животновод', 'пшениц',
+    ],
+  },
+  {
+    id: 'cooperation',
+    label: '中哈合作',
+    short: '合作',
+    tag: '中哈合作',
+    priority: 3,
+    focus: '中哈双边与中国—中亚合作，包括政府间协议、企业签约、地方合作、产能合作、展会论坛与人员往来；写清合作层级和可跟进的动作。',
+    keywords: [
+      '中哈', '中国', '哈萨克斯坦', '中亚', '一带一路', '上合', '合作', '协议',
+      '备忘录', '峰会', '论坛', '代表团', '商务', '联合', '签约', '产能合作',
+      '地方合作', '新疆', '霍尔果斯', '阿拉山口', '西安', '连云港',
+      'china', 'chinese', 'kazakhstan', 'central asia', 'belt and road', 'bri', 'sco',
+      'cooperation', 'agreement', 'mou', 'memorandum', 'summit', 'forum', 'delegation',
+      'joint', 'signing', 'xinjiang', 'khorgos', 'alashankou',
+      'китай', 'казахстан', 'центральн', 'шос', 'сотрудничеств', 'соглашен',
+      'меморандум', 'саммит', 'форум', 'делегац', 'совместн', 'подписан', 'синьцзян',
+      'хоргос', 'алашанькоу',
+    ],
+  },
+  {
+    id: 'logistics',
+    label: '金融与物流',
+    short: '物流',
+    tag: '金融与物流',
+    priority: 4,
+    focus: '跨境物流、铁路班列、口岸海关、过境通道、仓储供应链，以及银行、支付、汇率、融资与保险等金融变化；重点写时效、成本和资金路径。',
+    keywords: [
+      '物流', '运输', '铁路', '班列', '中欧班列', '口岸', '海关', '过境', '通道',
+      '航线', '港口', '仓储', '供应链', '货运', '卡车', '公路', '航空', '电商',
+      '快递', '清关', '换装', '银行', '支付', '汇率', '融资', '保险', '贷款', '结算',
+      'logistics', 'transport', 'railway', 'rail', 'train', 'port', 'customs', 'transit',
+      'corridor', 'route', 'shipping', 'warehouse', 'supply chain', 'freight', 'truck',
+      'road', 'aviation', 'e-commerce', 'express', 'clearance', 'transshipment', 'bank',
+      'payment', 'exchange rate', 'financing', 'insurance', 'loan', 'settlement',
+      'логистик', 'транспорт', 'железн', 'поезд', 'порт', 'таможн', 'транзит',
+      'коридор', 'маршрут', 'склад', 'поставк', 'груз', 'фур', 'дорог', 'авиа',
+      'электронн', 'курьер', 'оформлен', 'перевалк', 'банк', 'платеж', 'курс',
+      'финансир', 'страхов', 'кредит', 'расчет',
+    ],
+  },
+];
+
+export const THEME_BY_ID = Object.fromEntries(THEMES.map((theme) => [theme.id, theme]));
 
 export const DEFAULT_MODELS = {
   deepseek: 'deepseek-chat',

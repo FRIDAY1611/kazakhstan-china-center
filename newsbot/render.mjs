@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { SITE } from './config.mjs';
+import { SITE, THEME_BY_ID } from './config.mjs';
 
 export const esc = (value = '') => String(value)
   .replace(/&/g, '&amp;')
@@ -39,8 +39,10 @@ export function loadLayout(root) {
   };
 }
 
-function head({ title, description, canonical, ogType = 'article', date, imageAlt, schemaType = 'Article' }) {
+function head({ title, description, canonical, ogType = 'article', date, imageAlt, image, schemaType = 'Article' }) {
   const isArticle = schemaType === 'Article';
+  const absoluteImage = image && /^https?:/i.test(image) ? image : image ? `${SITE.origin}/${image.replace(/^\//, '')}` : `${SITE.origin}/og-image.png`;
+  const ogImage = /\.(png|jpe?g|webp)$/i.test(absoluteImage) ? absoluteImage : `${SITE.origin}/og-image.png`;
   const ld = isArticle ? {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -49,6 +51,7 @@ function head({ title, description, canonical, ogType = 'article', date, imageAl
     datePublished: date,
     dateModified: date,
     inLanguage: 'zh-CN',
+    image: [absoluteImage],
     author: { '@type': 'Organization', name: SITE.name },
     publisher: {
       '@type': 'Organization',
@@ -97,7 +100,7 @@ function head({ title, description, canonical, ogType = 'article', date, imageAl
 <meta property="og:url" content="${canonical}" />
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
-<meta property="og:image" content="${SITE.origin}/og-image.png" />
+<meta property="og:image" content="${ogImage}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="${esc(imageAlt || title)}" />
@@ -105,7 +108,7 @@ ${publishedMeta}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(title)}" />
 <meta name="twitter:description" content="${esc(description)}" />
-<meta name="twitter:image" content="${SITE.origin}/og-image.png" />
+<meta name="twitter:image" content="${ogImage}" />
 <script type="application/ld+json">
 ${JSON.stringify(ld, null, 2)}
 </script>
@@ -134,7 +137,19 @@ export function renderArticle({ post, content, sources, layout }) {
   const citedSources = sources.filter((s) => ids.has(s.id));
   const url = postUrl(post);
   const kind = KIND_LABEL[post.kind] || '资讯';
-  const tags = content.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
+  const themeLabel = post.theme && THEME_BY_ID[post.theme] ? THEME_BY_ID[post.theme].label : '';
+  const kicker = themeLabel ? `${themeLabel} · ${kind}` : '';
+  const displayTags = post.tags?.length ? post.tags : content.tags;
+  const tags = displayTags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
+  const articleCover = post.cover
+    ? (/^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, ''))
+    : '';
+  const coverAlt = post.coverAlt || `${themeLabel || kind}封面：${content.title}`;
+  const coverBlock = articleCover ? `
+    <figure class="article-cover">
+      <img src="${esc(articleCover)}" alt="${esc(coverAlt)}" width="1200" height="630" loading="eager" decoding="async" />
+      <figcaption><span>${esc(themeLabel || kind)} · 编辑部制图</span><span>${formatDateCN(post.date)}</span></figcaption>
+    </figure>` : '';
 
   const keyPoints = content.key_points
     .map((p) => `<li>${cite(p, ids)}</li>`)
@@ -157,6 +172,7 @@ export function renderArticle({ post, content, sources, layout }) {
   const main = `<div class="article-head">
   <div class="wrap">
     <div class="breadcrumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../insights.html">资讯</a><span class="sep">/</span><span>${esc(kind)}</span></div>
+    ${kicker ? `<p class="article-kicker">${esc(kicker)}</p>` : ''}
     <h1>${esc(content.title)}</h1>
     <div class="article-meta">
       <time datetime="${post.date}">${formatDateCN(post.date)}</time>
@@ -170,6 +186,7 @@ export function renderArticle({ post, content, sources, layout }) {
 <article class="wrap">
   <div class="prose">
     <p class="brief-lead">${esc(content.dek)}</p>
+${coverBlock}
 
     <div class="brief-points">
       <h2>今日要点</h2>
@@ -212,7 +229,7 @@ ${sourceItems}
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-${head({ title: content.title, description: content.summary, canonical: url, date: post.date })}
+${head({ title: content.title, description: content.summary, canonical: url, date: post.date, image: post.cover, imageAlt: coverAlt })}
 </head>
 
 <body>
@@ -236,16 +253,27 @@ function postKind(post) {
   return KIND_LABEL[post.kind] ? `<span class="post__kind">${KIND_LABEL[post.kind]}</span>` : '';
 }
 
-export function renderPostList(posts, limit = 10, hrefBase = 'insights/') {
-  return posts.slice(0, limit).map((post) => `<a class="post" href="${esc(`${hrefBase}${post.slug}.html`)}" data-reveal>
+export function renderPostList(posts, limit = 10, hrefBase = 'insights/', coverPrefix = '') {
+  return posts.slice(0, limit).map((post) => {
+    const cover = post.cover
+      ? (/^https?:/i.test(post.cover) ? post.cover : `${coverPrefix}${post.cover}`)
+      : '';
+    const thumb = cover
+      ? `<img class="post__thumb" src="${esc(cover)}" alt="" width="150" height="84" loading="lazy" decoding="async" />`
+      : '';
+    return `<a class="post${cover ? ' post--media' : ''}" href="${esc(`${hrefBase}${post.slug}.html`)}" data-reveal>
   <time datetime="${post.date}">${dotDate(post.date)}</time>
-  <div>
-    ${postKind(post)}
-    <h2>${esc(post.title)}</h2>
-    <p>${esc(post.summary)}</p>
+  <div class="post__main">
+    ${thumb}
+    <div class="post__text">
+      ${postKind(post)}
+      <h2>${esc(post.title)}</h2>
+      <p>${esc(post.summary)}</p>
+    </div>
   </div>
   <span class="arrow">→</span>
-</a>`).join('\n');
+</a>`;
+  }).join('\n');
 }
 
 export function updateInsightsPage(html, posts) {
@@ -266,7 +294,7 @@ export function renderArchive(posts, layout) {
     return `<section class="archive-group">
   <h2 class="archive-month">${y} 年 ${m} 月</h2>
   <div class="post-list">
-${renderPostList(list, list.length, '')}
+${renderPostList(list, list.length, '', '../')}
   </div>
 </section>`;
   }).join('\n\n');
@@ -326,13 +354,19 @@ export function renderRss(posts) {
   const items = posts.map((post) => {
     const url = postUrl(post);
     const categories = (post.tags || []).map((t) => `      <category>${esc(t)}</category>`).join('\n');
+    const cover = post.cover
+      ? (/^https?:/i.test(post.cover) ? post.cover : `${SITE.origin}/${post.cover}`)
+      : '';
+    const enclosure = cover
+      ? `\n      <enclosure url="${esc(cover)}" type="${/\.png$/i.test(cover) ? 'image/png' : /\.jpe?g$/i.test(cover) ? 'image/jpeg' : 'image/svg+xml'}" length="0" />`
+      : '';
     return `    <item>
       <title>${esc(post.title)}</title>
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <pubDate>${rfc822(post.date)}</pubDate>
 ${categories}
-      <description>${cdata(post.summary)}</description>
+      <description>${cdata(post.summary)}</description>${enclosure}
     </item>`;
   }).join('\n');
 

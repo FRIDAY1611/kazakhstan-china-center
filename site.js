@@ -17,15 +17,22 @@
   onScroll();
 
   if (toggle && panel) {
-    toggle.addEventListener('click', () => {
-      const open = panel.classList.toggle('is-open');
-      toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-controls', 'mobilePanel');
+    toggle.setAttribute('aria-expanded', 'false');
+    const setOpen = (open) => {
+      panel.classList.toggle('is-open', open);
       document.body.style.overflow = open ? 'hidden' : '';
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    };
+    toggle.addEventListener('click', () => setOpen(!panel.classList.contains('is-open')));
+    $$('a', panel).forEach((a) => a.addEventListener('click', () => setOpen(false)));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+        setOpen(false);
+        toggle.focus();
+      }
     });
-    $$('a', panel).forEach((a) => a.addEventListener('click', () => {
-      panel.classList.remove('is-open');
-      document.body.style.overflow = '';
-    }));
   }
 
   const items = $$('[data-reveal]');

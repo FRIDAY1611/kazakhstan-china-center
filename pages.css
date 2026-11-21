@@ -48,6 +48,7 @@ h1{ font-weight:600; letter-spacing:-.028em; }
   box-shadow:0 1px 0 rgba(16,24,40,.02), 0 12px 40px -24px rgba(16,24,40,.30);
 }
 .nav__inner{ width:100%; display:flex; align-items:center; gap:32px; }
+.brand__text,.nav__link,.nav__lang{ white-space:nowrap; }
 .nav__links{ display:flex; align-items:center; gap:4px; margin-left:auto; }
 .nav__link{
   position:relative; padding:10px 14px; border-radius:10px;
@@ -258,6 +259,17 @@ h1{ font-weight:600; letter-spacing:-.028em; }
   .about-grid{ grid-template-columns:1fr; gap:40px; }
   .team-grid{ grid-template-columns:1fr 1fr; }
   .case{ grid-template-columns:1fr; gap:24px; }
+}
+@media (min-width:821px) and (max-width:1200px){
+  .nav__inner{ gap:14px; }
+  .nav__link{ padding:10px 9px; font-size:13.5px; }
+  .nav__link::after{ left:9px; right:9px; }
+  .nav__lang{ padding:10px 5px; font-size:12.5px; }
+  .brand__cn{ font-size:14px; }
+}
+@media (max-width:960px){
+  .nav__links,.nav__cta,.nav__lang{ display:none; }
+  .nav__toggle{ display:flex; margin-left:auto; }
 }
 @media (max-width:820px){
   .wrap{ padding:0 22px; }

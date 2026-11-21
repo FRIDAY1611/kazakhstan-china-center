@@ -8,6 +8,7 @@
 <link rel="canonical" href="https://pleased-forestgreen-swan-56.hostingersite.com/" />
 <link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/" />
 <link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/" />
+<link rel="alternate" hreflang="ru" href="https://pleased-forestgreen-swan-56.hostingersite.com/ru/" />
 <link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/" />
 
 <!-- 图标 -->
@@ -222,6 +223,7 @@ h1{ font-weight:600; letter-spacing:-.028em; }
   box-shadow:0 1px 0 rgba(16,24,40,.02), 0 12px 40px -24px rgba(16,24,40,.30);
 }
 .nav__inner{ width:100%; display:flex; align-items:center; gap:32px; }
+.brand__text,.nav__link,.nav__lang{ white-space:nowrap; }
 .nav__links{ display:flex; align-items:center; gap:4px; margin-left:auto; }
 .nav__lang{ padding:10px 12px; font-size:13px; color:var(--t3); border-radius:10px; transition:color .3s; }
 .nav__lang:hover{ color:var(--t1); }
@@ -506,6 +508,17 @@ textarea{ resize:vertical; min-height:118px; }
   .hero__stats{ grid-template-columns:repeat(2,1fr); }
   .hero__stat:nth-child(2){ border-right:0; }
 }
+@media (min-width:821px) and (max-width:1200px){
+  .nav__inner{ gap:14px; }
+  .nav__link{ padding:10px 9px; font-size:13.5px; }
+  .nav__link::after{ left:9px; right:9px; }
+  .nav__lang{ padding:10px 5px; font-size:12.5px; }
+  .brand__cn{ font-size:14px; }
+}
+@media (max-width:960px){
+  .nav__links,.nav__cta,.nav__lang{ display:none; }
+  .nav__toggle{ display:flex; margin-left:auto; }
+}
 @media (max-width:820px){
   .wrap{ padding:0 22px; }
   .nav__links,.nav__cta,.nav__lang{ display:none; }
@@ -558,6 +571,7 @@ textarea{ resize:vertical; min-height:118px; }
       <a class="nav__link" href="about.html"    data-cursor>关于我们</a>
       <a class="nav__link" href="faq.html" data-cursor>常见问题</a>
       <a class="nav__lang" href="en/index.html" data-cursor>EN</a>
+      <a class="nav__lang" href="ru/index.html" data-cursor>РУ</a>
     </nav>
 
     <a class="btn btn--primary nav__cta" href="#contact" data-cursor>预约咨询</a>
@@ -574,6 +588,7 @@ textarea{ resize:vertical; min-height:118px; }
   <a href="faq.html">常见问题</a>
   <a href="#contact">预约咨询</a>
   <a href="en/index.html">English</a>
+  <a href="ru/index.html">Русский</a>
 </div>
 
 <main>
@@ -1115,6 +1130,7 @@ textarea{ resize:vertical; min-height:118px; }
           <li><a href="faq.html">常见问题</a></li>
           <li><a href="privacy.html">隐私政策</a></li>
           <li><a href="en/">English</a></li>
+          <li><a href="ru/">Русский</a></li>
         </ul>
       </div>
 

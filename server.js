@@ -60,6 +60,8 @@ const BOT_RE = /bot|crawler|spider|slurp|bingpreview|headless|facebookexternalhi
 
 function recordVisit(req, urlPath) {
   try {
+    const purpose = String(req.headers['sec-purpose'] || req.headers['purpose'] || '');
+    if (/prefetch|prerender/i.test(purpose)) return;
     const ua = String(req.headers['user-agent'] || '').slice(0, 300);
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
       || req.socket.remoteAddress || '';

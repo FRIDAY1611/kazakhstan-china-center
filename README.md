@@ -9,7 +9,7 @@ index.html                       首页
 services.html                    核心业务（六大模块的交付内容、流程、参考周期、FAQ）
 cases.html                       成功案例（结构化：背景 / 执行 / 结果）
 about.html                       关于我们（主体资质、团队构成、服务准则）
-insights.html                    洞察（文章列表、栏目规划）
+insights.html                    资讯（文章列表、栏目规划）
 insights/aifc-vs-local-company.html   文章：AIFC 架构与本地公司选择
 faq.html                         常见问题（25 条，按主题分组 + FAQPage 结构化数据）
 privacy.html                     隐私政策
@@ -29,7 +29,7 @@ ru/services.html                 俄文服务页（对应 services.html）
 - `site.webmanifest`：PWA 清单（名称、主题色、图标），各页通过 `rel="manifest"` 引用。
 - 结构化数据：首页 ProfessionalService；内页 BreadcrumbList；服务页与 faq.html 为 FAQPage；文章页 Article。
 - 中英俄三语：中文页导航含 `EN` / `РУ` 切换，英文页（`/en/`）含 `中文` / `РУ`，俄文页（`/ru/`）含 `中文` / `EN`；对应页面互相声明 `hreflang`（zh-CN / en / ru / x-default），并在 sitemap 中标注 alternate。
-- 英文、俄文版目前覆盖首页与服务页；导航中的案例/关于/洞察/隐私仍指向中文页。
+- 英文、俄文版目前覆盖首页与服务页；导航中的案例/关于/资讯/隐私仍指向中文页。
 
 ## 部署（Hostinger Node.js + Git 自动部署）
 

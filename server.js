@@ -42,6 +42,14 @@ const MIME = {
   '.xml': 'application/xml; charset=utf-8',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json',
+};
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 };
 
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
@@ -189,11 +197,7 @@ tr:last-child td{border-bottom:0}
 /* ---------------- HTTP 服务 ---------------- */
 
 function send(res, code, type, body) {
-  res.writeHead(code, {
-    'Content-Type': type,
-    'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-  });
+  res.writeHead(code, { 'Content-Type': type, ...SECURITY_HEADERS });
   res.end(body);
 }
 
@@ -208,9 +212,8 @@ function sendNotFound(res, req) {
   res.writeHead(404, {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'public, max-age=0, must-revalidate',
-    'X-Content-Type-Options': 'nosniff',
     'X-Robots-Tag': 'noindex, follow',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    ...SECURITY_HEADERS,
   });
   res.end(req.method === 'HEAD' ? undefined : NOT_FOUND_BODY);
 }
@@ -258,7 +261,7 @@ const server = http.createServer((req, res) => {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
         'X-Robots-Tag': 'noindex, nofollow',
-        'X-Content-Type-Options': 'nosniff',
+        ...SECURITY_HEADERS,
       });
       res.end(req.method === 'HEAD' ? undefined : html);
     });
@@ -298,8 +301,7 @@ const server = http.createServer((req, res) => {
       'Cache-Control': ext === '.html'
         ? 'public, max-age=0, must-revalidate'
         : 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      ...SECURITY_HEADERS,
     });
     res.end(req.method === 'HEAD' ? undefined : data);
   });

@@ -1,0 +1,16 @@
+{
+  "name": "中哈政务商务服务中心",
+  "short_name": "中哈服务中心",
+  "description": "为中国企业出海哈萨克斯坦及中亚提供政务对接、商务考察、公司注册、签证许可、法律财税与物流清关一站式服务。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F6F8",
+  "theme_color": "#2C3E5C",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

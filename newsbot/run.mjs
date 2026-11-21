@@ -131,15 +131,16 @@ async function generateTheme(theme, sources, dateLabel, opts, allSources) {
   }
 
   let last;
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const { raw } = await generateArticle(sources, dateLabel, { theme, log: console.log });
       return validateArticle(raw, sources);
     } catch (err) {
       last = err;
-      const retriable = /成稿校验未通过|模型未返回 JSON/.test(err.message);
+      const retriable = !err.status || err.status === 429 || err.status >= 500
+        || /成稿校验未通过|JSON/.test(err.message);
       console.log(`  ${theme.label} 第 ${attempt} 次成稿未通过：${err.message}`);
-      if (!retriable || attempt === 2) break;
+      if (!retriable || attempt === 3) break;
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   }

@@ -9,6 +9,14 @@ const path = require('path');
 const ROOT = __dirname;
 const PORT = process.env.PORT || 3000;
 
+const BLOCKED_FILES = new Set([
+  'server.js',
+  'package.json',
+  'package-lock.json',
+  'README.md',
+  '.gitignore',
+]);
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -35,6 +43,13 @@ const server = http.createServer((req, res) => {
   if (!filePath.startsWith(ROOT + path.sep) && filePath !== ROOT) {
     res.writeHead(403); res.end('Forbidden'); return;
   }
+
+  // 不对外暴露源码/配置/隐藏文件
+  const rel = path.relative(ROOT, filePath).split(path.sep).join('/');
+  const blocked = BLOCKED_FILES.has(rel)
+    || rel.split('/').some(seg => seg.startsWith('.'))
+    || /\.(mjs|log)$/i.test(rel);
+  if (blocked) { res.writeHead(404); res.end('Not Found'); return; }
 
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not Found'); return; }

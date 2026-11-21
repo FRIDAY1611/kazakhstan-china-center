@@ -197,6 +197,24 @@ function send(res, code, type, body) {
   res.end(body);
 }
 
+let NOT_FOUND_BODY = null;
+try { NOT_FOUND_BODY = fs.readFileSync(path.join(ROOT, '404.html')); } catch {}
+
+function sendNotFound(res, req) {
+  if (!NOT_FOUND_BODY) {
+    send(res, 404, 'text/plain; charset=utf-8', 'Not Found');
+    return;
+  }
+  res.writeHead(404, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'public, max-age=0, must-revalidate',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Robots-Tag': 'noindex, follow',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+  });
+  res.end(req.method === 'HEAD' ? undefined : NOT_FOUND_BODY);
+}
+
 const server = http.createServer((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     send(res, 405, 'text/plain; charset=utf-8', 'Method Not Allowed');
@@ -267,7 +285,7 @@ const server = http.createServer((req, res) => {
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      send(res, 404, 'text/plain; charset=utf-8', 'Not Found');
+      sendNotFound(res, req);
       return;
     }
     const ext = path.extname(filePath).toLowerCase();

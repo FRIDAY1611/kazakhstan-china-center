@@ -61,6 +61,8 @@ h1{ font-weight:600; letter-spacing:-.028em; }
 .nav__link:hover::after{ transform:scaleX(1); }
 .nav__link.is-active{ color:var(--t1); font-weight:500; }
 .nav__link.is-active::after{ transform:scaleX(1); }
+.nav__lang{ padding:10px 12px; border-radius:10px; font-size:13px; color:var(--t3); transition:color .35s var(--ease-soft); }
+.nav__lang:hover{ color:var(--t1); }
 .nav__toggle{
   display:none; width:42px; height:42px; border:1px solid var(--line-2); border-radius:12px;
   background:rgba(255,255,255,.7); align-items:center; justify-content:center;
@@ -259,7 +261,7 @@ h1{ font-weight:600; letter-spacing:-.028em; }
 }
 @media (max-width:820px){
   .wrap{ padding:0 22px; }
-  .nav__links,.nav__cta{ display:none; }
+  .nav__links,.nav__cta,.nav__lang{ display:none; }
   .nav__toggle{ display:flex; margin-left:auto; }
   .page-hero{ padding:calc(var(--nav-h) + 56px) 0 52px; }
   .section{ padding:72px 0; }

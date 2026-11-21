@@ -11,7 +11,10 @@ cases.html                       成功案例（结构化：背景 / 执行 / �
 about.html                       关于我们（主体资质、团队构成、服务准则）
 insights.html                    洞察（文章列表、栏目规划）
 insights/aifc-vs-local-company.html   文章：AIFC 架构与本地公司选择
+faq.html                         常见问题（25 条，按主题分组 + FAQPage 结构化数据）
 privacy.html                     隐私政策
+en/index.html                    英文首页（对应 index.html）
+en/services.html                 英文服务页（对应 services.html）
 404.html                         404 页面（由 server.js 在文件不存在时返回 404 状态）
 ```
 
@@ -22,7 +25,9 @@ privacy.html                     隐私政策
 - 首页 Tailwind 由 `input.css` 编译为静态 `styles.css`（改首页类名后需重新编译）。
 - 联系表单使用 FormSubmit（`formsubmit.co`）提交到 `wang13689993888@outlook.com`，含隐私政策同意勾选。
 - `site.webmanifest`：PWA 清单（名称、主题色、图标），各页通过 `rel="manifest"` 引用。
-- 结构化数据：首页 ProfessionalService；内页 BreadcrumbList；服务页 FAQPage；文章页 Article。
+- 结构化数据：首页 ProfessionalService；内页 BreadcrumbList；服务页与 faq.html 为 FAQPage；文章页 Article。
+- 中英双语：中文页导航含 `EN` 切换，英文页（`/en/`）含 `中文` 切换；对应页面互相声明 `hreflang`（zh-CN / en / x-default），并在 sitemap 中标注 alternate。
+- 英文版目前覆盖首页与服务页；导航中的案例/关于/洞察/隐私仍指向中文页。
 
 ## 部署（Hostinger Node.js + Git 自动部署）
 

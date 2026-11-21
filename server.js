@@ -239,7 +239,7 @@ const server = http.createServer((req, res) => {
     send(res, 400, 'text/plain; charset=utf-8', 'Bad Request');
     return;
   }
-  if (urlPath === '/') urlPath = '/index.html';
+  if (urlPath.endsWith('/')) urlPath += 'index.html';
 
   /* 统计后台：仅在设置 STATS_TOKEN 时可访问，否则 404 */
   if (parsed.pathname === '/admin/stats') {

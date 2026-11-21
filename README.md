@@ -21,6 +21,8 @@ privacy.html                     隐私政策
 - 首页样式内联在 `index.html`；内页共用 `pages.css` + `site.js`。
 - 首页 Tailwind 由 `input.css` 编译为静态 `styles.css`（改首页类名后需重新编译）。
 - 联系表单使用 FormSubmit（`formsubmit.co`）提交到 `wang13689993888@outlook.com`，含隐私政策同意勾选。
+- `site.webmanifest`：PWA 清单（名称、主题色、图标），各页通过 `rel="manifest"` 引用。
+- 结构化数据：首页 ProfessionalService；内页 BreadcrumbList；服务页 FAQPage；文章页 Article。
 
 ## 部署（Hostinger Node.js + Git 自动部署）
 
@@ -39,7 +41,7 @@ Git push 到 `main` 后 Hostinger 自动部署，约 40 秒生效。
 ## 安全
 
 `server.js` 不对外暴露：`server.js`、`package.json`、`README.md`、隐藏文件、`.mjs/.log/.jsonl`、`data/` 目录；
-路径穿越请求返回 403。
+路径穿越请求返回 403。响应头含 `X-Content-Type-Options`、`Referrer-Policy`、`X-Frame-Options`、`Permissions-Policy`。
 
 ## 待替换素材
 

@@ -11,6 +11,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="site.webmanifest" />
 <meta name="theme-color" content="#2C3E5C" />
 
 <!-- 社交分享（微信 / 飞书 / WhatsApp / LinkedIn） -->
@@ -1207,14 +1208,22 @@ textarea{ resize:vertical; min-height:118px; }
 
     // 移动端抽屉
     if (toggle && panel) {
-      toggle.addEventListener('click', () => {
-        panel.classList.toggle('is-open');
-        document.body.style.overflow = panel.classList.contains('is-open') ? 'hidden' : '';
+      toggle.setAttribute('aria-controls', 'mobilePanel');
+      toggle.setAttribute('aria-expanded', 'false');
+      const setOpen = (open) => {
+        panel.classList.toggle('is-open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+      };
+      toggle.addEventListener('click', () => setOpen(!panel.classList.contains('is-open')));
+      $$('a', panel).forEach((a) => a.addEventListener('click', () => setOpen(false)));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+          setOpen(false);
+          toggle.focus();
+        }
       });
-      $$('a', panel).forEach((a) => a.addEventListener('click', () => {
-        panel.classList.remove('is-open');
-        document.body.style.overflow = '';
-      }));
     }
   })();
 

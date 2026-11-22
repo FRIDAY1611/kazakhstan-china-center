@@ -86,10 +86,10 @@ function coverFigure(post) {
   const src = /^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, '');
   const theme = post.kind === 'guide' ? '落地观察' : (primaryThemeForPost(post)?.label || '资讯');
   const alt = post.coverAlt || `${theme}：${post.title}`;
-  const credit = REAL_IMG_RE.test(post.cover) ? '资讯配图' : '编辑部制图';
+  const caption = REAL_IMG_RE.test(post.cover) ? (post.coverAlt || theme) : `${theme} · 编辑部制图`;
   return `<figure class="article-cover">
       <img src="${esc(src)}" alt="${esc(alt)}" width="1200" height="630" loading="eager" decoding="async" />
-      <figcaption><span>${esc(theme)} · ${credit}</span><span>${formatDateCN(post.date)}</span></figcaption>
+      <figcaption><span>${esc(caption)}</span><span>${formatDateCN(post.date)}</span></figcaption>
     </figure>`;
 }
 

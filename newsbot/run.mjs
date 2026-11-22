@@ -113,13 +113,12 @@ function injectCover(root, post, opts) {
     }
   }
 
-  // 真实图片作为封面时，同步 OG/Twitter/JSON-LD 图片地址。
-  if (REAL_IMG_RE.test(post.cover)) {
-    const abs = /^https?:/i.test(post.cover) ? post.cover : `${SITE.origin}/${post.cover.replace(/^\//, '')}`;
-    html = html.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${esc(abs)}$2`);
-    html = html.replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${esc(abs)}$2`);
-    html = html.replace(/("image": \[\s*")(?:https?:)?[^"]*(")/, `$1${esc(abs)}$2`);
-  }
+  // 同步 OG/Twitter/JSON-LD 图片地址：真实图片用照片本身，SVG 回退到 og-image.png。
+  const abs = /^https?:/i.test(post.cover) ? post.cover : `${SITE.origin}/${post.cover.replace(/^\//, '')}`;
+  const ogImg = REAL_IMG_RE.test(post.cover) ? abs : `${SITE.origin}/og-image.png`;
+  html = html.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${esc(ogImg)}$2`);
+  html = html.replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${esc(ogImg)}$2`);
+  html = html.replace(/("image": \[\s*")(?:https?:)?[^"]*(")/, `$1${esc(ogImg)}$2`);
 
   write(root, postPath(post), html, opts);
 }

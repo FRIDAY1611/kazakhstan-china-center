@@ -73,10 +73,24 @@ function prepareCovers(root, posts, opts) {
   for (const post of posts) {
     if (!post.cover) post.cover = coverPath(post);
     if (!post.coverAlt) post.coverAlt = coverAlt(post);
-    if (post.cover.startsWith('insights/covers/')) {
+    // 只生成品牌 SVG 封面；真实图片（jpg/png/webp）已在磁盘上，不要覆盖。
+    if (post.cover.startsWith('insights/covers/') && /\.svg$/i.test(post.cover)) {
       write(root, post.cover, renderCoverSvg(post), opts);
     }
   }
+}
+
+const REAL_IMG_RE = /\.(jpe?g|png|webp)$/i;
+
+function coverFigure(post) {
+  const src = /^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, '');
+  const theme = post.kind === 'guide' ? '落地观察' : (primaryThemeForPost(post)?.label || '资讯');
+  const alt = post.coverAlt || `${theme}：${post.title}`;
+  const credit = REAL_IMG_RE.test(post.cover) ? '资讯配图' : '编辑部制图';
+  return `<figure class="article-cover">
+      <img src="${esc(src)}" alt="${esc(alt)}" width="1200" height="630" loading="eager" decoding="async" />
+      <figcaption><span>${esc(theme)} · ${credit}</span><span>${formatDateCN(post.date)}</span></figcaption>
+    </figure>`;
 }
 
 function injectCover(root, post, opts) {
@@ -84,24 +98,29 @@ function injectCover(root, post, opts) {
   const file = path.join(root, postPath(post));
   if (!existsSync(file)) return;
   let html = readFileSync(file, 'utf8');
-  if (html.includes('class="article-cover"')) return;
+  const figure = coverFigure(post);
 
-  const src = /^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, '');
-  const theme = post.kind === 'guide' ? '落地观察' : (primaryThemeForPost(post)?.label || '资讯');
-  const alt = post.coverAlt || `${theme}封面：${post.title}`;
-  const figure = `<figure class="article-cover">
-      <img src="${esc(src)}" alt="${esc(alt)}" width="1200" height="630" loading="eager" decoding="async" />
-      <figcaption><span>${esc(theme)} · 编辑部制图</span><span>${formatDateCN(post.date)}</span></figcaption>
-    </figure>`;
-
-  const lead = /(<p class="brief-lead">[\s\S]*?<\/p>)/;
-  if (lead.test(html)) {
-    html = html.replace(lead, `$1\n\n    ${figure}`);
-  } else if (html.includes('<div class="prose">')) {
-    html = html.replace(/(<div class="prose">)/, `$1\n    ${figure}`);
+  if (html.includes('class="article-cover"')) {
+    html = html.replace(/<figure class="article-cover">[\s\S]*?<\/figure>/, figure);
   } else {
-    return;
+    const lead = /(<p class="brief-lead">[\s\S]*?<\/p>)/;
+    if (lead.test(html)) {
+      html = html.replace(lead, `$1\n\n    ${figure}`);
+    } else if (html.includes('<div class="prose">')) {
+      html = html.replace(/(<div class="prose">)/, `$1\n    ${figure}`);
+    } else {
+      return;
+    }
   }
+
+  // 真实图片作为封面时，同步 OG/Twitter/JSON-LD 图片地址。
+  if (REAL_IMG_RE.test(post.cover)) {
+    const abs = /^https?:/i.test(post.cover) ? post.cover : `${SITE.origin}/${post.cover.replace(/^\//, '')}`;
+    html = html.replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${esc(abs)}$2`);
+    html = html.replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${esc(abs)}$2`);
+    html = html.replace(/("image": \[\s*")(?:https?:)?[^"]*(")/, `$1${esc(abs)}$2`);
+  }
+
   write(root, postPath(post), html, opts);
 }
 
@@ -254,12 +273,19 @@ async function main() {
   }
 
   const usedTitles = new Set(existingDaily.map((p) => titleKey(p.title)));
+  const previousBySlug = new Map(manifest.posts.map((p) => [p.slug, p]));
   const generated = contents.map(({ theme, content }) => {
     let title = content.title;
     if (usedTitles.has(titleKey(title))) title = `${title}｜${theme.label}`;
     usedTitles.add(titleKey(title));
     content.title = title;
     const post = makePost(theme, content, date);
+    // 重写当天稿件时，保留已有的真实图片封面，避免被重新生成的 SVG 覆盖。
+    const prev = previousBySlug.get(post.slug);
+    if (prev?.cover && REAL_IMG_RE.test(prev.cover)) {
+      post.cover = prev.cover;
+      post.coverAlt = prev.coverAlt;
+    }
     console.log(`  ${theme.label}：${content.title}（引用 ${content.cited_source_ids.join('、')}）`);
     return { post, content };
   });

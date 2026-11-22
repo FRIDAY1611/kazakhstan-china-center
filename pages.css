@@ -5,7 +5,7 @@
 :root{
   --ink:#0A0E15; --ink-soft:#161D29;
   --paper:#F5F6F8; --paper-2:#EDEFF3; --white:#FFFFFF;
-  --t1:#101828; --t2:#4A5567; --t3:#8A94A3;
+  --t1:#101828; --t2:#4A5567; --t3:#5F6C7E;
   --line:rgba(16,24,40,.075); --line-2:rgba(16,24,40,.13);
   --blue:#7C97BC; --navy:#3E5B85; --gold:#C0A374; --teal:#7FA39D;
   --ease-out:cubic-bezier(.22,1,.36,1); --ease-io:cubic-bezier(.65,0,.35,1); --ease-soft:cubic-bezier(.4,0,.2,1);

@@ -1,0 +1,26 @@
+# 中哈政务商务服务中心 (Kazakhstan China Center for Government and Business Services)
+
+> 中国企业出海哈萨克斯坦及中亚的一站式服务机构：投资咨询、商务考察、公司注册、签证许可、法律财税、物流清关。常驻阿拉木图与阿斯塔纳，AIFC 注册号 261040900239。
+
+本站为中国企业出海哈萨克斯坦提供可执行的信息与落地服务。每日发布中亚市场简报（带来源与数据），并提供公司注册、签证、税务、物流等实操手册。
+
+## 核心页面
+- [首页](https://pleased-forestgreen-swan-56.hostingersite.com/): 中心概况、六大服务模块、成功案例、联系与预约。
+- [核心业务](https://pleased-forestgreen-swan-56.hostingersite.com/services.html): 六大模块的交付内容、流程、参考周期与 FAQ。
+- [成功案例](https://pleased-forestgreen-swan-56.hostingersite.com/cases.html): 已落地的案例（汽配考察团、农机落地、跨境物流）。
+- [关于我们](https://pleased-forestgreen-swan-56.hostingersite.com/about.html): 主体资质、团队构成、服务准则。
+- [哈萨克斯坦营商关键数据](https://pleased-forestgreen-swan-56.hostingersite.com/data.html): 可引用的关键数字（税率、市场规模、AIFC 政策等）。
+- [常见问题](https://pleased-forestgreen-swan-56.hostingersite.com/faq.html): 25 条高频问题与简明回答。
+- [资讯](https://pleased-forestgreen-swan-56.hostingersite.com/insights.html): 每日中亚简报与落地手册。
+- [资讯归档](https://pleased-forestgreen-swan-56.hostingersite.com/insights/archive.html): 按月份归档的全部资讯。
+- [RSS 订阅](https://pleased-forestgreen-swan-56.hostingersite.com/insights.xml): 每日中亚简报 RSS 订阅。
+
+## 多语言
+- [English](https://pleased-forestgreen-swan-56.hostingersite.com/en/): English homepage, services, key data and FAQ.
+- [Русский](https://pleased-forestgreen-swan-56.hostingersite.com/ru/): Русская версия (главная и услуги).
+
+## 联系
+- 电话: +86 136 8999 3888
+- 邮箱: wang13689993888@outlook.com
+- 微信: 13689993888
+- 地址: 010000, Kazakhstan, Astana, Esil district, 8/2 Turkistan

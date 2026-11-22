@@ -14,11 +14,16 @@ insights/archive.html            资讯归档（按月份分组，自动生成�
 insights.xml                     RSS 订阅（自动生成）
 insights/aifc-vs-local-company.html   文章：AIFC 架构与本地公司选择
 faq.html                         常见问题（25 条，按主题分组 + FAQPage 结构化数据）
+data.html                        哈萨克斯坦营商关键数据（可引用数字：税率/市场/AIFC/物流）
 privacy.html                     隐私政策
 en/index.html                    英文首页（对应 index.html）
 en/services.html                 英文服务页（对应 services.html）
+en/cases.html                    英文案例（对应 cases.html）
+en/faq.html                      英文常见问题（对应 faq.html）
+en/data.html                     英文营商关键数据（对应 data.html）
 ru/index.html                    俄文首页（对应 index.html）
 ru/services.html                 俄文服务页（对应 services.html）
+llms.txt / llms-full.txt         AI 爬虫站点说明（GEO）
 404.html                         404 页面（由 server.js 在文件不存在时返回 404 状态）
 ```
 
@@ -78,6 +83,19 @@ ru/services.html                 俄文服务页（对应 services.html）
 启动命令：`npm start`（即 `node server.js`，读取 `PORT` 环境变量）。
 
 Git push 到 `main` 后 Hostinger 自动部署，约 40 秒生效。
+
+## GEO 优化（生成式引擎优化）
+
+面向 ChatGPT / 豆包 / Kimi / Perplexity / Gemini 等 AI 搜索引擎，让品牌更容易被引用与推荐：
+
+- `llms.txt` / `llms-full.txt`：供 AI 爬虫消费的站点说明（关键页面 + 一句话描述 / 全量摘要）。
+- `robots.txt`：明确放行 GPTBot、PerplexityBot、ClaudeBot、Google-Extended、CCBot 等生成式引擎爬虫。
+- 首页/英文首页 Organization 结构化数据补全：`identifier`（AIFC 注册号）、`geo`、`contactPoint`、`slogan`、`hasMap`。
+- `data.html` / `en/data.html`：哈萨克斯坦营商关键数据页（可被引用的数字资产）。
+- 服务/案例/关于/FAQ/资讯页：顶部「一句话结论」直接答案块 + `Speakable` 结构化数据（`cssSelector: .direct-answer`）。
+- 文章页：`Speakable` 指向正文导语（`.brief-lead`），提升 AI 语音/摘要抓取。
+- 英文补全：`en/cases.html`、`en/faq.html`、`en/data.html`（多语言引用权重）。
+- 站外执行清单与监测清单：见 `GEO-站外执行清单.md`、`GEO-监测清单.md`。
 
 ## 访问统计（内置，无第三方、无 Cookie）
 

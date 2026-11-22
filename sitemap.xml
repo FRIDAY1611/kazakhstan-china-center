@@ -62,15 +62,21 @@
   </url>
 <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/faq.html</loc>
-    <lastmod>2026-11-22</lastmod>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/faq.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/faq.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/faq.html" />
   </url>
 <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/cases.html</loc>
-    <lastmod>2026-11-22</lastmod>
+    <lastmod>2026-11-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/cases.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/cases.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/cases.html" />
   </url>
 <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/about.html</loc>
@@ -89,6 +95,43 @@
     <lastmod>2026-11-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/data.html</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/data.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/data.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/data.html" />
+  </url>
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/en/data.html</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/data.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/data.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/data.html" />
+  </url>
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/en/faq.html</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/faq.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/faq.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/faq.html" />
+  </url>
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/en/cases.html</loc>
+    <lastmod>2026-11-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://pleased-forestgreen-swan-56.hostingersite.com/cases.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://pleased-forestgreen-swan-56.hostingersite.com/en/cases.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/cases.html" />
   </url>
 
   <url>

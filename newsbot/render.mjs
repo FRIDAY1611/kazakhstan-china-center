@@ -116,7 +116,17 @@ ${JSON.stringify(ld, null, 2)}
 <script type="application/ld+json">
 ${JSON.stringify(crumbs, null, 2)}
 </script>
-<link rel="stylesheet" href="../pages.css" />`;
+${isArticle ? `<script type="application/ld+json">
+${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: title,
+  url: canonical,
+  inLanguage: 'zh-CN',
+  speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.brief-lead'] },
+}, null, 2)}
+</script>
+` : ''}<link rel="stylesheet" href="../pages.css" />`;
 }
 
 function cite(text, ids, emState) {

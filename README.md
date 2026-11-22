@@ -95,7 +95,7 @@ Git push 到 `main` 后 Hostinger 自动部署，约 40 秒生效。
 ## 待替换素材
 
 - `img/casestudy-*.svg`：已替换为实拍照片 `img/casestudy-*.jpg`（2026-11-22：汽配考察团 / 农机落地阿拉木图 / 跨境物流通道）
-- `img/centralasia-office.svg`：实拍照片
+- `img/centralasia-office.svg`：已替换为实拍照片 `img/centralasia-office.jpg`（2026-11-22，关于我们/首页团队图）
 - `img/wechat-qr.svg`：真实微信二维码（替换后无需改代码）
 - 合作伙伴：替换为具体机构名称 / 授权 logo
 - 团队页：成员姓名、照片、履历（需本人授权）

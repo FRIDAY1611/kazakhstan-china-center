@@ -86,7 +86,7 @@
   </url>
 <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights.html</loc>
-    <lastmod>2026-11-24</lastmod>
+    <lastmod>2026-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -133,6 +133,24 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://pleased-forestgreen-swan-56.hostingersite.com/cases.html" />
   </url>
 
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights/2026-11-25-cooperation.html</loc>
+    <lastmod>2026-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights/2026-11-25-market.html</loc>
+    <lastmod>2026-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights/2026-11-25-policy.html</loc>
+    <lastmod>2026-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
   <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights/2026-11-24-cooperation.html</loc>
     <lastmod>2026-11-24</lastmod>
@@ -189,7 +207,7 @@
   </url>
   <url>
     <loc>https://pleased-forestgreen-swan-56.hostingersite.com/insights/archive.html</loc>
-    <lastmod>2026-11-24</lastmod>
+    <lastmod>2026-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

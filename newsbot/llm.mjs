@@ -18,6 +18,17 @@ const SYSTEM_PROMPT = `你是「${SITE.name}」的资深财经编辑，负责每
 10. 只输出一个 JSON 对象，不要 Markdown 代码块，不要任何解释文字。
 11. 输出必须能被 JSON.parse 直接解析：字符串内如需引用，一律使用中文引号「」；禁止出现未转义的英文双引号；换行一律用 \\n 转义。`;
 
+const GUIDE_SYSTEM_PROMPT = `你是「${SITE.name}」的落地手册编辑，负责撰写面向中国企业的《哈萨克斯坦落地手册》。读者是准备或正在进入哈萨克斯坦的中国企业家、外派管理者和业务负责人。
+
+写作要求：
+1. 手册性质：实用、可执行，写清楚「怎么做、按什么顺序、要准备什么、最容易卡在哪」，而不是泛泛的背景介绍。
+2. 结构：开头 1 段导语（60–120 字，说明这份手册解决什么问题）；然后按「步骤/环节」分 4–6 节，每节有小标题和 2–3 段要点式内容，正文（不含导语与执行提示）总量 700–1200 字；最后「执行提示」给出 3–5 条避坑建议。
+3. 内容基于哈萨克斯坦现行通行做法撰写；涉及税率、费用、许可、周期、材料清单等具体信息时，一律加"以官方最新规定为准"，不要编造精确数字或日期。
+4. 不写空话套话，不用标题党词汇；不确定的地方明确写"需向官方/持牌机构确认"。
+5. 全文中文，简体，专业克制，信息密度高。
+6. 只输出一个 JSON 对象，不要 Markdown 代码块，不要任何解释文字。
+7. 输出必须能被 JSON.parse 直接解析：字符串内如需引用，一律使用中文引号「」；禁止出现未转义的英文双引号；换行一律用 \\n 转义。`;
+
 const outputSchema = (theme) => `{
   "title": "标题，18–34 个汉字，信息型，不用问句",
   "dek": "副标题，30–70 字，点明本文核心",
@@ -63,6 +74,36 @@ ${outputSchema(theme)}
 - cited_source_ids 至少包含 2 个实际在正文中被引用的编号。
 - 不要把来源链接直接写进正文，引用只用 [n]。
 - 如果材料不足以支撑某一节，就减少节数，不要编造。`;
+}
+
+const guideSchema = (topic) => `{
+  "title": "标题，16–30 个汉字，信息型，体现「怎么做」，不用问句",
+  "dek": "副标题，25–60 字，点明这份手册的用途",
+  "summary": "列表页摘要，50–100 字",
+  "tags": ["从这些分类中选 1–3 个：${CATEGORIES.join('、')}；本篇必含「落地观察」"],
+  "key_points": ["3–5 条核心要点，每条 15–40 字"],
+  "sections": [
+    { "heading": "环节小标题，4–12 字", "paragraphs": ["该环节的做法说明，1–3 段"] }
+  ],
+  "implications": ["3–5 条执行提示/避坑，每条 20–60 字"]
+}`;
+
+export function buildGuidePrompt(topic, dateLabel, sources = []) {
+  const background = sources.length
+    ? `\n当日资讯背景（仅供参考，不要求逐条引用，也不得把背景里没有的事实写死）：\n${formatSourcesForPrompt(sources.slice(0, 8))}`
+    : '';
+  return `日期：${dateLabel}（北京时间）
+手册主题：${topic.title}
+主题范围：${topic.focus}
+${background}
+
+请输出符合以下结构的 JSON：
+${guideSchema(topic)}
+
+注意：
+- 这是「落地手册」，不是新闻简报；重点是可执行的步骤与避坑，不要求 [编号] 引用。
+- 正文总量 700–1200 字，每个环节写足 2–3 段，不要只写一两句。
+- 涉及具体费率、周期、材料清单时，一律写"以官方最新规定为准"，不要编造。`;
 }
 
 function repairJsonText(s) {
@@ -216,8 +257,69 @@ export async function generateArticle(sources, dateLabel, { env = process.env, l
   throw new Error('模型连续返回无法解析的 JSON');
 }
 
+export async function generateGuide(topic, sources, dateLabel, { env = process.env, log = console.log } = {}) {
+  const provider = resolveProvider(env);
+  if (!provider) throw new Error('未配置任何 LLM API Key');
+  const model = env.NEWS_MODEL || DEFAULT_MODELS[provider];
+  const userPrompt = buildGuidePrompt(topic, dateLabel, sources);
+  log(`  落地手册：${topic.title} · 提供商：${provider} / 模型：${model}`);
+
+  const call = async (temperature) => {
+    if (provider === 'anthropic') {
+      const data = await post('https://api.anthropic.com/v1/messages', {
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      }, {
+        model,
+        max_tokens: 5000,
+        temperature,
+        system: GUIDE_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      });
+      const text = data?.content?.map((c) => c.text || '').join('') || '';
+      return { text };
+    }
+    const base = provider === 'deepseek'
+      ? (env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com')
+      : (env.OPENAI_BASE_URL || 'https://api.openai.com/v1');
+    const key = provider === 'deepseek' ? env.DEEPSEEK_API_KEY : env.OPENAI_API_KEY;
+    const data = await post(`${base.replace(/\/$/, '')}/chat/completions`, {
+      authorization: `Bearer ${key}`,
+    }, {
+      model,
+      temperature,
+      max_tokens: 5000,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: GUIDE_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+    });
+    return { text: data?.choices?.[0]?.message?.content || '' };
+  };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const temperature = Math.min(0.9, 0.4 + (attempt - 1) * 0.2);
+    try {
+      const result = await withRetry(() => call(temperature));
+      const raw = extractJson(result.text);
+      return { raw, provider, model };
+    } catch (err) {
+      const parseIssue = !err.status && /JSON/.test(err.message);
+      if (!parseIssue || attempt === 3) throw err;
+      log(`  落地手册输出不是合法 JSON，换温度重试：${err.message}`);
+    }
+  }
+  throw new Error('模型连续返回无法解析的 JSON');
+}
+
 export function loadMockArticle(root) {
   const file = path.join(root, 'newsbot', 'fixtures', 'article.json');
+  return JSON.parse(readFileSync(file, 'utf8'));
+}
+
+export function loadMockGuide(root) {
+  const file = path.join(root, 'newsbot', 'fixtures', 'guide.json');
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
@@ -293,5 +395,45 @@ export function validateArticle(raw, sources) {
     sections,
     implications,
     cited_source_ids: cited,
+  };
+}
+
+export function validateGuide(raw) {
+  const errors = [];
+
+  const title = cleanText(raw?.title, 60);
+  if (title.length < 10) errors.push('标题过短');
+  const dek = cleanText(raw?.dek, 160);
+  if (dek.length < 20) errors.push('副标题过短');
+  const summary = cleanText(raw?.summary, 240);
+  if (summary.length < 40) errors.push('摘要过短');
+
+  const tags = strList(raw?.tags, 3, 16);
+  const keyPoints = strList(raw?.key_points, 5, 90);
+  if (keyPoints.length < 3) errors.push('要点少于 3 条');
+  const implications = strList(raw?.implications, 5, 120);
+  if (implications.length < 2) errors.push('执行提示少于 2 条');
+
+  const sections = [];
+  if (Array.isArray(raw?.sections)) {
+    for (const sec of raw.sections.slice(0, 6)) {
+      const heading = cleanText(sec?.heading, 40);
+      const paragraphs = strList(sec?.paragraphs, 3, 900);
+      if (heading && paragraphs.length) sections.push({ heading, paragraphs });
+    }
+  }
+  if (sections.length < 2) errors.push('正文分节少于 2 节');
+
+  const bodyText = sections.flatMap((s) => s.paragraphs).join('');
+  if (bodyText.length < 500) errors.push(`正文过短（${bodyText.length} 字）`);
+
+  if (errors.length) throw new Error(`落地手册成稿校验未通过：${errors.join('；')}`);
+
+  return {
+    title, dek, summary,
+    tags: tags.length ? tags : ['落地观察'],
+    key_points: keyPoints,
+    sections,
+    implications,
   };
 }

@@ -149,7 +149,8 @@ export function renderArticle({ post, content, sources, layout }) {
   const url = postUrl(post);
   const kind = KIND_LABEL[post.kind] || '资讯';
   const themeLabel = post.theme && THEME_BY_ID[post.theme] ? THEME_BY_ID[post.theme].label : '';
-  const kicker = themeLabel ? `${themeLabel} · ${kind}` : '';
+  const isGuide = post.kind === 'guide';
+  const kicker = isGuide ? '落地观察 · 落地手册' : (themeLabel ? `${themeLabel} · ${kind}` : '');
   const displayTags = post.tags?.length ? post.tags : content.tags;
   const tags = displayTags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
   const articleCover = post.cover
@@ -182,6 +183,20 @@ export function renderArticle({ post, content, sources, layout }) {
     return `<li id="src-${s.id}"><span class="src-num">[${s.id}]</span> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(s.source)} — ${esc(s.title)}</a><span class="src-date">${when}</span></li>`;
   }).join('\n');
 
+  const pointsTitle = isGuide ? '核心要点' : '今日要点';
+  const takeawayTitle = isGuide ? '执行提示' : '对企业意味着什么';
+  const sourcesBlock = isGuide ? '' : `
+    <section class="sources">
+      <h2>信息来源</h2>
+      <ol class="sources-list">
+${sourceItems}
+      </ol>
+    </section>`;
+  const noteText = isGuide
+    ? `本文由${esc(SITE.name)}编辑部撰写，属一般性落地参考，不构成法律、税务或投资建议。涉及具体税率、费用、许可、周期与材料要求，请以哈萨克斯坦官方最新规定及持牌专业机构意见为准。`
+    : `本文由${esc(SITE.name)}编辑部基于公开来源整理，引用编号对应文末信息来源；仅作一般性信息参考，不构成法律、税务或投资建议。
+      涉及具体政策、费率与许可要求，请以哈萨克斯坦官方最新规定及持牌专业机构意见为准。`;
+
   const main = `<div class="article-head">
   <div class="wrap">
     <div class="breadcrumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../insights.html">资讯</a><span class="sep">/</span><span>${esc(kind)}</span></div>
@@ -202,7 +217,7 @@ export function renderArticle({ post, content, sources, layout }) {
 ${coverBlock}
 
     <div class="brief-points">
-      <h2>今日要点</h2>
+      <h2>${pointsTitle}</h2>
       <ul>
 ${keyPoints}
       </ul>
@@ -210,21 +225,14 @@ ${keyPoints}
 
 ${sections}
 
-    <h2>对企业意味着什么</h2>
+    <h2>${takeawayTitle}</h2>
     <ul class="impl">
 ${implications}
     </ul>
-
-    <section class="sources">
-      <h2>信息来源</h2>
-      <ol class="sources-list">
-${sourceItems}
-      </ol>
-    </section>
+${sourcesBlock}
 
     <p class="note">
-      本文由${esc(SITE.name)}编辑部基于公开来源整理，引用编号对应文末信息来源；仅作一般性信息参考，不构成法律、税务或投资建议。
-      涉及具体政策、费率与许可要求，请以哈萨克斯坦官方最新规定及持牌专业机构意见为准。
+      ${noteText}
     </p>
   </div>
 </article>

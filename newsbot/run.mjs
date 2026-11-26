@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { SITE, DAILY_TARGET } from './config.mjs';
+import { SITE, DAILY_TARGET, GUIDE_TARGET, GUIDE_TOPICS } from './config.mjs';
 import { fetchFeeds, loadMockSources } from './sources.mjs';
-import { generateArticle, loadMockArticle, validateArticle, resolveProvider } from './llm.mjs';
+import { generateArticle, generateGuide, loadMockArticle, loadMockGuide, validateArticle, validateGuide, resolveProvider } from './llm.mjs';
 import { assignThemeBuckets, selectDailyThemes, primaryThemeForPost } from './themes.mjs';
 import { coverPath, coverAlt, renderCoverSvg } from './cover.mjs';
 import { emphasizeArticleHtml } from './emphasis.mjs';
@@ -149,6 +149,31 @@ function makePost(theme, content, date) {
   };
 }
 
+function guideTopicForDate(date) {
+  const t = new Date(`${date}T00:00:00+08:00`).getTime();
+  const dayIndex = Math.floor(t / 86400000);
+  return GUIDE_TOPICS[((dayIndex % GUIDE_TOPICS.length) + GUIDE_TOPICS.length) % GUIDE_TOPICS.length];
+}
+
+function makeGuidePost(topic, content, date) {
+  const slug = `${date}-guide-${topic.id}`;
+  return {
+    slug,
+    title: content.title,
+    summary: content.summary,
+    date,
+    kind: 'guide',
+    tags: [...new Set(['落地观察', ...content.tags])].slice(0, 3),
+    url: `insights/${slug}.html`,
+  };
+}
+
+async function generateDailyGuide(topic, sources, dateLabel, opts) {
+  if (opts.mock) return validateGuide(loadMockGuide(opts.root));
+  const { raw } = await generateGuide(topic, sources, dateLabel, { log: console.log });
+  return validateGuide(raw);
+}
+
 async function generateTheme(theme, sources, dateLabel, opts, allSources) {
   if (opts.mock) {
     const content = validateArticle(loadMockArticle(opts.root), allSources);
@@ -199,7 +224,7 @@ async function main() {
 
   const date = opts.date || todayInShanghai();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`日期格式错误：${date}`);
-  console.log(`\n=== ${SITE.name} · 每日中亚资讯（每天 ${DAILY_TARGET} 篇）· ${date} ===`);
+  console.log(`\n=== ${SITE.name} · 每日中亚资讯（${DAILY_TARGET} 篇简报 + ${GUIDE_TARGET} 篇落地手册）· ${date} ===`);
 
   const manifest = loadManifest(opts.root);
 
@@ -220,8 +245,12 @@ async function main() {
   }
 
   const existingDaily = manifest.posts.filter((p) => p.kind === 'daily' && p.date === date);
-  if (existingDaily.length >= DAILY_TARGET && !opts.force) {
-    console.log(`今天已有 ${existingDaily.length} 篇简报，跳过（使用 --force 可重写当天主题稿）。`);
+  const existingGuides = manifest.posts.filter((p) => p.kind === 'guide' && p.date === date);
+  const dailyDone = existingDaily.length >= DAILY_TARGET;
+  const guideDone = existingGuides.length >= GUIDE_TARGET;
+
+  if (dailyDone && guideDone && !opts.force) {
+    console.log(`今天已有 ${existingDaily.length} 篇简报、${existingGuides.length} 篇落地手册，跳过（使用 --force 可重写）。`);
     prepareCovers(opts.root, manifest.posts, opts);
     for (const post of manifest.posts) {
       injectCover(opts.root, post, opts);
@@ -237,65 +266,91 @@ async function main() {
     return;
   }
 
-  console.log('1/4 获取来源');
-  const sources = opts.mock ? loadMockSources(opts.root) : await fetchFeeds({ log: console.log });
-  if (!sources.length) throw new Error('本次没有获取到任何来源，终止发布以免生成空稿');
-  console.log(`  可用来源：${sources.length} 条`);
+  const dateLabel = formatDateCN(date);
+  const needBriefs = !dailyDone || opts.force;
+  const needGuide = !guideDone || opts.force;
 
-  const buckets = assignThemeBuckets(sources);
-  const chosen = selectDailyThemes({ existingDaily, buckets, force: opts.force });
-  if (!chosen.length) {
-    console.log('今天的目标主题稿已齐，跳过生成。');
-    return;
-  }
-  console.log(`  本期选择 ${chosen.length} 个栏目：${chosen.map((t) => t.label).join('、')}`);
-  for (const theme of chosen) {
-    console.log(`  ${theme.label}：${buckets[theme.id].length} 条来源`);
+  // 1. 来源：简报必需；手册仅作当日背景参考。
+  let sources = [];
+  if (needBriefs) {
+    console.log('获取来源');
+    sources = opts.mock ? loadMockSources(opts.root) : await fetchFeeds({ log: console.log });
+    if (!sources.length) throw new Error('本次没有获取到任何来源，终止发布以免生成空稿');
+    console.log(`  可用来源：${sources.length} 条`);
   }
 
-  console.log('2/4 生成与校验成稿');
-  const results = await Promise.allSettled(chosen.map((theme) => (
-    generateTheme(theme, buckets[theme.id], formatDateCN(date), opts, sources)
-  )));
+  const generated = [];
+  const newSlugs = new Set();
 
-  const contents = [];
-  results.forEach((result, i) => {
-    if (result.status === 'fulfilled') {
-      contents.push({ theme: chosen[i], content: result.value });
-    } else {
-      console.log(`  ${chosen[i].label} 生成失败：${result.reason?.message || result.reason}`);
+  // 2. 生成简报
+  if (needBriefs) {
+    const buckets = assignThemeBuckets(sources);
+    const chosen = selectDailyThemes({ existingDaily, buckets, force: opts.force });
+    console.log(`  本期选择 ${chosen.length} 个栏目：${chosen.map((t) => t.label).join('、')}`);
+    for (const theme of chosen) {
+      console.log(`  ${theme.label}：${buckets[theme.id].length} 条来源`);
     }
-  });
-  if (!contents.length) throw new Error('本期没有任何一篇成稿通过校验，终止发布');
-  if (contents.length < chosen.length) {
-    console.log(`  警告：本期仅 ${contents.length}/${chosen.length} 篇成功，缺失栏目将在下次运行时补齐。`);
+
+    console.log('生成简报');
+    const results = await Promise.allSettled(chosen.map((theme) => (
+      generateTheme(theme, buckets[theme.id], dateLabel, opts, sources)
+    )));
+
+    const contents = [];
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        contents.push({ theme: chosen[i], content: result.value });
+      } else {
+        console.log(`  ${chosen[i].label} 生成失败：${result.reason?.message || result.reason}`);
+      }
+    });
+    if (contents.length < chosen.length) {
+      console.log(`  警告：本期仅 ${contents.length}/${chosen.length} 篇简报成功，缺失栏目将在下次运行时补齐。`);
+    }
+
+    const usedTitles = new Set(existingDaily.map((p) => titleKey(p.title)));
+    const previousBySlug = new Map(manifest.posts.map((p) => [p.slug, p]));
+    for (const { theme, content } of contents) {
+      let title = content.title;
+      if (usedTitles.has(titleKey(title))) title = `${title}｜${theme.label}`;
+      usedTitles.add(titleKey(title));
+      content.title = title;
+      const post = makePost(theme, content, date);
+      // 重写当天稿件时，保留已有的真实图片封面，避免被重新生成的 SVG 覆盖。
+      const prev = previousBySlug.get(post.slug);
+      if (prev?.cover && REAL_IMG_RE.test(prev.cover)) {
+        post.cover = prev.cover;
+        post.coverAlt = prev.coverAlt;
+      }
+      console.log(`  ${theme.label}：${content.title}（引用 ${content.cited_source_ids.join('、')}）`);
+      generated.push({ post, content });
+      newSlugs.add(post.slug);
+    }
   }
 
-  const usedTitles = new Set(existingDaily.map((p) => titleKey(p.title)));
-  const previousBySlug = new Map(manifest.posts.map((p) => [p.slug, p]));
-  const generated = contents.map(({ theme, content }) => {
-    let title = content.title;
-    if (usedTitles.has(titleKey(title))) title = `${title}｜${theme.label}`;
-    usedTitles.add(titleKey(title));
-    content.title = title;
-    const post = makePost(theme, content, date);
-    // 重写当天稿件时，保留已有的真实图片封面，避免被重新生成的 SVG 覆盖。
-    const prev = previousBySlug.get(post.slug);
-    if (prev?.cover && REAL_IMG_RE.test(prev.cover)) {
-      post.cover = prev.cover;
-      post.coverAlt = prev.coverAlt;
+  // 3. 生成落地手册
+  if (needGuide) {
+    const topic = guideTopicForDate(date);
+    console.log(`生成落地手册：${topic.title}`);
+    try {
+      const content = await generateDailyGuide(topic, sources, dateLabel, opts);
+      const post = makeGuidePost(topic, content, date);
+      console.log(`  落地手册：${content.title}`);
+      generated.push({ post, content });
+      newSlugs.add(post.slug);
+    } catch (err) {
+      console.log(`  落地手册生成失败：${err.message}`);
     }
-    console.log(`  ${theme.label}：${content.title}（引用 ${content.cited_source_ids.join('、')}）`);
-    return { post, content };
-  });
+  }
 
-  const newSlugs = new Set(generated.map(({ post }) => post.slug));
+  if (!generated.length) throw new Error('本期没有任何一篇成稿通过校验，终止发布');
+
   const posts = sortPosts([
     ...generated.map(({ post }) => post),
     ...manifest.posts.filter((p) => !newSlugs.has(p.slug)),
   ]);
 
-  console.log('3/4 生成封面、渲染页面与订阅文件');
+  console.log('生成封面、渲染页面与订阅文件');
   prepareCovers(opts.root, posts, opts);
   for (const post of posts) {
     injectCover(opts.root, post, opts);
@@ -308,7 +363,7 @@ async function main() {
   }
   renderSite(opts.root, posts, layout, date, opts);
 
-  console.log('4/4 完成');
+  console.log('完成');
   for (const { post } of generated) {
     console.log(`  ${SITE.origin}/${postPath(post)}`);
   }

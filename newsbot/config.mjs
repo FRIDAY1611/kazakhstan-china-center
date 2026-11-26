@@ -90,6 +90,7 @@ export const FEEDS = [
 export const WINDOW_HOURS = 72;
 export const MAX_ITEMS = 50;
 export const DAILY_TARGET = 3;
+export const GUIDE_TARGET = 1;
 
 export const THEMES = [
   {
@@ -176,6 +177,17 @@ export const THEMES = [
 ];
 
 export const THEME_BY_ID = Object.fromEntries(THEMES.map((theme) => [theme.id, theme]));
+
+// 落地手册主题：每天轮换一篇，与当日简报并列发布。
+export const GUIDE_TOPICS = [
+  { id: 'market-entry', tag: '准入判断', title: '进入市场第一步：准入判断', focus: '行业准入、许可与认证、目标客户与城市选择、本地合作伙伴的初步判断框架，帮企业决定「能不能做、从哪切入」。' },
+  { id: 'company-registration', tag: '公司注册', title: '公司注册与银行开户实操', focus: '本地有限责任公司（ТОО）与 AIFC 两种路径的选择、注册材料与周期、银行开户的反洗钱尽调要点。' },
+  { id: 'visa-work-permit', tag: '签证许可', title: '签证与工作许可办理', focus: '商务签证、工作许可、临时居留的衔接流程、材料清单与常见延误点。' },
+  { id: 'tax-accounting', tag: '财税合规', title: '税务申报与记账合规', focus: '企业所得税、增值税、个人所得税与社会税的申报义务、税历节奏与高频合规风险。' },
+  { id: 'employment', tag: '本地用工', title: '本地用工与社保', focus: '本地与外籍员工雇佣、劳动合同、社保缴款、本地员工比例与配额等合规要点。' },
+  { id: 'logistics-customs', tag: '物流清关', title: '物流与清关落地', focus: '中欧（中亚）班列与跨境卡车的选择、报关清关单据、口岸时效与在途管理。' },
+  { id: 'import-export', tag: '进出口认证', title: '进出口与 EAC 认证', focus: '进出口许可、关税归类、EAC 符合性评估与认证流程，如何把认证排进上市时间表。' },
+];
 
 export const DEFAULT_MODELS = {
   deepseek: 'deepseek-chat',

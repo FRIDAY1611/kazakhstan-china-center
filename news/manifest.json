@@ -1,6 +1,21 @@
 {
   "posts": [
     {
+      "slug": "2026-11-28-industry-ecommerce",
+      "title": "哈萨克斯坦跨境电商：平台格局初定，本地化是下一程",
+      "summary": "哈萨克斯坦电商市场由 Kaspi 主导，Wildberries 与 Ozon 加速渗透，中国消费品机会集中在本地仓、支付合规与差异化选品，但需应对清关与竞争壁垒。",
+      "date": "2026-11-28",
+      "kind": "industry",
+      "tags": [
+        "行业观察",
+        "跨境电商",
+        "市场与产业"
+      ],
+      "url": "insights/2026-11-28-industry-ecommerce.html",
+      "cover": "insights/covers/2026-11-28-industry-ecommerce.svg",
+      "coverAlt": "行业观察封面：哈萨克斯坦跨境电商：平台格局初定，本地化是下一程"
+    },
+    {
       "slug": "2026-11-28-market",
       "title": "哈油籽加工产能2028年增66% 原料供应承压",
       "summary": "哈萨克斯坦油籽加工能力到2028年将增长66%，但工厂面临油料短缺风险；Baiterek控股计划2027年提供8万亿坚戈经济支持；国家银行调查显示通胀预测下调、坚戈走强；哈国油或折价收购卢克在哈资产，仍需美方许可。",

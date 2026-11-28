@@ -5,7 +5,7 @@ export const SITE = {
   email: 'wang13689993888@outlook.com',
 };
 
-export const CATEGORIES = ['政策与监管', '市场与产业', '中哈合作', '金融与物流', '落地观察'];
+export const CATEGORIES = ['政策与监管', '市场与产业', '中哈合作', '金融与物流', '落地观察', '行业观察'];
 
 export const FEEDS = [
   {
@@ -91,6 +91,7 @@ export const WINDOW_HOURS = 72;
 export const MAX_ITEMS = 50;
 export const DAILY_TARGET = 3;
 export const GUIDE_TARGET = 1;
+export const INDUSTRY_TARGET = 1;
 
 export const THEMES = [
   {
@@ -187,6 +188,17 @@ export const GUIDE_TOPICS = [
   { id: 'employment', tag: '本地用工', title: '本地用工与社保', focus: '本地与外籍员工雇佣、劳动合同、社保缴款、本地员工比例与配额等合规要点。' },
   { id: 'logistics-customs', tag: '物流清关', title: '物流与清关落地', focus: '中欧（中亚）班列与跨境卡车的选择、报关清关单据、口岸时效与在途管理。' },
   { id: 'import-export', tag: '进出口认证', title: '进出口与 EAC 认证', focus: '进出口许可、关税归类、EAC 符合性评估与认证流程，如何把认证排进上市时间表。' },
+];
+
+// 行业观察主题：每天轮换一篇，对细分行业做纵深分析，与当日简报、落地手册并列发布。
+export const INDUSTRY_TOPICS = [
+  { id: 'auto-parts', tag: '汽车汽配', title: '汽车与汽配行业观察', focus: '哈萨克斯坦汽车保有量与本地组装格局、零部件进口依赖与本地化率、二手车进口与认证（OTTC/EAEU），以及中国汽配进入的渠道、认证与售后机会。' },
+  { id: 'agri-machinery', tag: '农业农机', title: '农业与农业机械行业观察', focus: '耕地规模与粮食产量、农机保有量与更新需求、政府投资补贴与融资租赁，以及中国农机以性价比切入本地市场的机会与卡点。' },
+  { id: 'energy-mining', tag: '能源矿业', title: '能源与矿业行业观察', focus: '石油、天然气、铀与矿业（铜、金、稀土）的投资与开采格局、中资参与，以及设备、配件与服务的采购需求。' },
+  { id: 'construction', tag: '建材工程', title: '建材与建筑工程行业观察', focus: '住房与基础设施投资、新城区与城市更新、水泥钢材玻璃等建材的供需与进口缺口，以及中国建材与承包商进入的窗口。' },
+  { id: 'ecommerce', tag: '跨境电商', title: '跨境电商与消费品行业观察', focus: '电商平台（Kaspi、Wildberries、Ozon）格局、支付与物流、清关与本地仓，以及中国消费品与跨境电商进入的机会与合规要点。' },
+  { id: 'logistics', tag: '物流仓储', title: '跨境物流与仓储行业观察', focus: '中欧（中亚）班列、口岸与换装、公路运输、仓储与保税冷链，以及中国物流企业沿通道布局的机会。' },
+  { id: 'machinery', tag: '机械装备', title: '工业机械装备行业观察', focus: '采矿、建筑、油气与食品加工设备需求、中国装备出口与本地服务能力，以及认证、配件供应与售后的进入要点。' },
 ];
 
 export const DEFAULT_MODELS = {

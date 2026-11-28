@@ -29,6 +29,18 @@ const GUIDE_SYSTEM_PROMPT = `你是「${SITE.name}」的落地手册编辑，负
 6. 只输出一个 JSON 对象，不要 Markdown 代码块，不要任何解释文字。
 7. 输出必须能被 JSON.parse 直接解析：字符串内如需引用，一律使用中文引号「」；禁止出现未转义的英文双引号；换行一律用 \\n 转义。`;
 
+const INDUSTRY_SYSTEM_PROMPT = `你是「${SITE.name}」的行业分析师，负责撰写面向中国企业的《哈萨克斯坦行业观察》。读者是准备进入或正在哈萨克斯坦经营的中国企业家、投资人与业务负责人。
+
+写作要求：
+1. 行业观察性质：对一个细分行业做纵深分析，写清「市场规模与现状、需求驱动、主要玩家与竞争格局、准入与政策、对中国企业的机会、风险」，服务于投资与进入决策。
+2. 结构：开头 1 段导语（60–120 字，说明这个行业为什么值得现在关注）；然后按「市场概况 / 需求驱动 / 竞争格局 / 准入与政策 / 中国企业的机会 / 风险」等维度分 4–6 节，每节有小标题和 2–3 段；正文（不含导语与机会风险清单）总量 700–1200 字；最后「机会与风险」给出 3–5 条判断。
+3. 基于哈萨克斯坦及中亚市场的通行情况撰写；涉及市场规模、增速、份额、税率等具体数字时，用定性或区间表述，并注明"以官方最新统计为准"，不要编造精确数字或日期。
+4. 观点要落到可执行的判断：这个行业现在能不能进、从哪个环节切入、主要卡点在哪。
+5. 不写空话套话，不用标题党词汇；不确定处明确写"需进一步核实"。
+6. 全文中文，简体，专业克制，信息密度高。
+7. 只输出一个 JSON 对象，不要 Markdown 代码块，不要任何解释文字。
+8. 输出必须能被 JSON.parse 直接解析：字符串内如需引用，一律使用中文引号「」；禁止出现未转义的英文双引号；换行一律用 \\n 转义。`;
+
 const outputSchema = (theme) => `{
   "title": "标题，18–34 个汉字，信息型，不用问句",
   "dek": "副标题，30–70 字，点明本文核心",
@@ -104,6 +116,36 @@ ${guideSchema(topic)}
 - 这是「落地手册」，不是新闻简报；重点是可执行的步骤与避坑，不要求 [编号] 引用。
 - 正文总量 700–1200 字，每个环节写足 2–3 段，不要只写一两句。
 - 涉及具体费率、周期、材料清单时，一律写"以官方最新规定为准"，不要编造。`;
+}
+
+const industrySchema = (topic) => `{
+  "title": "标题，16–30 个汉字，信息型，体现「行业+判断」，不用问句",
+  "dek": "副标题，25–60 字，点明本文核心判断",
+  "summary": "列表页摘要，50–100 字",
+  "tags": ["从这些分类中选 1–3 个：${CATEGORIES.join('、')}；本篇必含「行业观察」"],
+  "key_points": ["3–5 条核心判断，每条 15–40 字"],
+  "sections": [
+    { "heading": "维度小标题，4–12 字", "paragraphs": ["该维度的分析段落，1–3 段"] }
+  ],
+  "implications": ["3–5 条机会与风险判断，每条 20–60 字"]
+}`;
+
+export function buildIndustryPrompt(topic, dateLabel, sources = []) {
+  const background = sources.length
+    ? `\n当日资讯背景（仅供参考，用于对齐最新动态，不要求逐条引用，也不得把背景里没有的事实写死）：\n${formatSourcesForPrompt(sources.slice(0, 8))}`
+    : '';
+  return `日期：${dateLabel}（北京时间）
+行业主题：${topic.title}
+分析范围：${topic.focus}
+${background}
+
+请输出符合以下结构的 JSON：
+${industrySchema(topic)}
+
+注意：
+- 这是「行业观察」，不是新闻简报，也不是操作手册；重点是对行业格局与机会的纵深判断，不要求 [编号] 引用。
+- 正文总量 700–1200 字，每个维度写足 2–3 段，不要只写一两句。
+- 涉及市场规模、增速、份额、税率等具体数字时，用定性或区间表述并注明"以官方最新统计为准"，不要编造精确数字。`;
 }
 
 function repairJsonText(s) {
@@ -313,6 +355,62 @@ export async function generateGuide(topic, sources, dateLabel, { env = process.e
   throw new Error('模型连续返回无法解析的 JSON');
 }
 
+export async function generateIndustry(topic, sources, dateLabel, { env = process.env, log = console.log } = {}) {
+  const provider = resolveProvider(env);
+  if (!provider) throw new Error('未配置任何 LLM API Key');
+  const model = env.NEWS_MODEL || DEFAULT_MODELS[provider];
+  const userPrompt = buildIndustryPrompt(topic, dateLabel, sources);
+  log(`  行业观察：${topic.title} · 提供商：${provider} / 模型：${model}`);
+
+  const call = async (temperature) => {
+    if (provider === 'anthropic') {
+      const data = await post('https://api.anthropic.com/v1/messages', {
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      }, {
+        model,
+        max_tokens: 5000,
+        temperature,
+        system: INDUSTRY_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      });
+      const text = data?.content?.map((c) => c.text || '').join('') || '';
+      return { text };
+    }
+    const base = provider === 'deepseek'
+      ? (env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com')
+      : (env.OPENAI_BASE_URL || 'https://api.openai.com/v1');
+    const key = provider === 'deepseek' ? env.DEEPSEEK_API_KEY : env.OPENAI_API_KEY;
+    const data = await post(`${base.replace(/\/$/, '')}/chat/completions`, {
+      authorization: `Bearer ${key}`,
+    }, {
+      model,
+      temperature,
+      max_tokens: 5000,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: INDUSTRY_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+    });
+    return { text: data?.choices?.[0]?.message?.content || '' };
+  };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const temperature = Math.min(0.9, 0.4 + (attempt - 1) * 0.2);
+    try {
+      const result = await withRetry(() => call(temperature));
+      const raw = extractJson(result.text);
+      return { raw, provider, model };
+    } catch (err) {
+      const parseIssue = !err.status && /JSON/.test(err.message);
+      if (!parseIssue || attempt === 3) throw err;
+      log(`  行业观察输出不是合法 JSON，换温度重试：${err.message}`);
+    }
+  }
+  throw new Error('模型连续返回无法解析的 JSON');
+}
+
 export function loadMockArticle(root) {
   const file = path.join(root, 'newsbot', 'fixtures', 'article.json');
   return JSON.parse(readFileSync(file, 'utf8'));
@@ -320,6 +418,11 @@ export function loadMockArticle(root) {
 
 export function loadMockGuide(root) {
   const file = path.join(root, 'newsbot', 'fixtures', 'guide.json');
+  return JSON.parse(readFileSync(file, 'utf8'));
+}
+
+export function loadMockIndustry(root) {
+  const file = path.join(root, 'newsbot', 'fixtures', 'industry.json');
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
@@ -432,6 +535,46 @@ export function validateGuide(raw) {
   return {
     title, dek, summary,
     tags: tags.length ? tags : ['落地观察'],
+    key_points: keyPoints,
+    sections,
+    implications,
+  };
+}
+
+export function validateIndustry(raw) {
+  const errors = [];
+
+  const title = cleanText(raw?.title, 60);
+  if (title.length < 10) errors.push('标题过短');
+  const dek = cleanText(raw?.dek, 160);
+  if (dek.length < 20) errors.push('副标题过短');
+  const summary = cleanText(raw?.summary, 240);
+  if (summary.length < 40) errors.push('摘要过短');
+
+  const tags = strList(raw?.tags, 3, 16);
+  const keyPoints = strList(raw?.key_points, 5, 90);
+  if (keyPoints.length < 3) errors.push('要点少于 3 条');
+  const implications = strList(raw?.implications, 5, 120);
+  if (implications.length < 2) errors.push('机会与风险少于 2 条');
+
+  const sections = [];
+  if (Array.isArray(raw?.sections)) {
+    for (const sec of raw.sections.slice(0, 6)) {
+      const heading = cleanText(sec?.heading, 40);
+      const paragraphs = strList(sec?.paragraphs, 3, 900);
+      if (heading && paragraphs.length) sections.push({ heading, paragraphs });
+    }
+  }
+  if (sections.length < 2) errors.push('正文分节少于 2 节');
+
+  const bodyText = sections.flatMap((s) => s.paragraphs).join('');
+  if (bodyText.length < 500) errors.push(`正文过短（${bodyText.length} 字）`);
+
+  if (errors.length) throw new Error(`行业观察成稿校验未通过：${errors.join('；')}`);
+
+  return {
+    title, dek, summary,
+    tags: tags.length ? tags : ['行业观察'],
     key_points: keyPoints,
     sections,
     implications,

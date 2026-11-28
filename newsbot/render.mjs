@@ -12,7 +12,7 @@ export const esc = (value = '') => String(value)
 export const postPath = (post) => `insights/${post.slug}.html`;
 export const postUrl = (post) => `${SITE.origin}/${postPath(post)}`;
 
-export const KIND_LABEL = { daily: '每日简报', guide: '落地手册' };
+export const KIND_LABEL = { daily: '每日简报', guide: '落地手册', industry: '行业观察' };
 
 export function formatDateCN(date) {
   const [y, m, d] = date.split('-').map(Number);
@@ -150,7 +150,8 @@ export function renderArticle({ post, content, sources, layout }) {
   const kind = KIND_LABEL[post.kind] || '资讯';
   const themeLabel = post.theme && THEME_BY_ID[post.theme] ? THEME_BY_ID[post.theme].label : '';
   const isGuide = post.kind === 'guide';
-  const kicker = isGuide ? '落地观察 · 落地手册' : (themeLabel ? `${themeLabel} · ${kind}` : '');
+  const isIndustry = post.kind === 'industry';
+  const kicker = isGuide ? '落地观察 · 落地手册' : isIndustry ? '行业观察' : (themeLabel ? `${themeLabel} · ${kind}` : '');
   const displayTags = post.tags?.length ? post.tags : content.tags;
   const tags = displayTags.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
   const articleCover = post.cover
@@ -183,9 +184,9 @@ export function renderArticle({ post, content, sources, layout }) {
     return `<li id="src-${s.id}"><span class="src-num">[${s.id}]</span> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(s.source)} — ${esc(s.title)}</a><span class="src-date">${when}</span></li>`;
   }).join('\n');
 
-  const pointsTitle = isGuide ? '核心要点' : '今日要点';
-  const takeawayTitle = isGuide ? '执行提示' : '对企业意味着什么';
-  const sourcesBlock = isGuide ? '' : `
+  const pointsTitle = isGuide ? '核心要点' : isIndustry ? '核心判断' : '今日要点';
+  const takeawayTitle = isGuide ? '执行提示' : isIndustry ? '机会与风险' : '对企业意味着什么';
+  const sourcesBlock = (isGuide || isIndustry) ? '' : `
     <section class="sources">
       <h2>信息来源</h2>
       <ol class="sources-list">
@@ -194,7 +195,9 @@ ${sourceItems}
     </section>`;
   const noteText = isGuide
     ? `本文由${esc(SITE.name)}编辑部撰写，属一般性落地参考，不构成法律、税务或投资建议。涉及具体税率、费用、许可、周期与材料要求，请以哈萨克斯坦官方最新规定及持牌专业机构意见为准。`
-    : `本文由${esc(SITE.name)}编辑部基于公开来源整理，引用编号对应文末信息来源；仅作一般性信息参考，不构成法律、税务或投资建议。
+    : isIndustry
+      ? `本文由${esc(SITE.name)}编辑部撰写，属行业观察与一般性判断，不构成法律、税务或投资建议。涉及市场规模、税率、许可与政策等，请以哈萨克斯坦官方最新统计与规定及持牌专业机构意见为准。`
+      : `本文由${esc(SITE.name)}编辑部基于公开来源整理，引用编号对应文末信息来源；仅作一般性信息参考，不构成法律、税务或投资建议。
       涉及具体政策、费率与许可要求，请以哈萨克斯坦官方最新规定及持牌专业机构意见为准。`;
 
   const main = `<div class="article-head">
@@ -322,13 +325,13 @@ ${renderPostList(list, list.length, '', '../')}
 
   const canonical = `${SITE.origin}/insights/archive.html`;
   const title = '资讯归档';
-  const description = '中哈政务商务服务中心资讯归档：每日中亚市场简报与落地手册，按时间倒序排列。';
+  const description = '中哈政务商务服务中心资讯归档：每日中亚市场简报、落地手册与行业观察，按时间倒序排列。';
 
   const main = `<section class="page-hero">
   <div class="wrap">
     <div class="breadcrumb"><a href="../index.html">首页</a><span class="sep">/</span><a href="../insights.html">资讯</a><span class="sep">/</span><span>归档</span></div>
     <h1>资讯归档</h1>
-    <p class="lead">每日中亚市场简报与落地手册，按发布时间倒序排列。共 ${posts.length} 篇。</p>
+    <p class="lead">每日中亚市场简报、落地手册与行业观察，按发布时间倒序排列。共 ${posts.length} 篇。</p>
   </div>
 </section>
 
@@ -397,7 +400,7 @@ ${categories}
     <title>${esc(SITE.name)} · 中亚市场资讯</title>
     <link>${SITE.origin}/insights.html</link>
     <atom:link href="${SITE.origin}/insights.xml" rel="self" type="application/rss+xml" />
-    <description>哈萨克斯坦与中亚市场的政策、产业、合作与落地观察，面向中国企业家每日更新。</description>
+    <description>哈萨克斯坦与中亚市场的政策、产业、合作、落地手册与行业观察，面向中国企业家每日更新。</description>
     <language>zh-cn</language>
     <lastBuildDate>${latest ? rfc822(latest) : new Date().toUTCString()}</lastBuildDate>
 ${items}

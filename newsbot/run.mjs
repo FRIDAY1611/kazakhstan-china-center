@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { SITE, DAILY_TARGET, GUIDE_TARGET, GUIDE_TOPICS } from './config.mjs';
+import { SITE, DAILY_TARGET, GUIDE_TARGET, INDUSTRY_TARGET, GUIDE_TOPICS, INDUSTRY_TOPICS } from './config.mjs';
 import { fetchFeeds, loadMockSources } from './sources.mjs';
-import { generateArticle, generateGuide, loadMockArticle, loadMockGuide, validateArticle, validateGuide, resolveProvider } from './llm.mjs';
+import { generateArticle, generateGuide, generateIndustry, loadMockArticle, loadMockGuide, loadMockIndustry, validateArticle, validateGuide, validateIndustry, resolveProvider } from './llm.mjs';
 import { assignThemeBuckets, selectDailyThemes, primaryThemeForPost } from './themes.mjs';
 import { coverPath, coverAlt, renderCoverSvg } from './cover.mjs';
 import { emphasizeArticleHtml } from './emphasis.mjs';
@@ -84,7 +84,7 @@ const REAL_IMG_RE = /\.(jpe?g|png|webp)$/i;
 
 function coverFigure(post) {
   const src = /^https?:/i.test(post.cover) ? post.cover : post.cover.replace(/^insights\//, '');
-  const theme = post.kind === 'guide' ? '落地观察' : (primaryThemeForPost(post)?.label || '资讯');
+  const theme = post.kind === 'guide' ? '落地观察' : post.kind === 'industry' ? '行业观察' : (primaryThemeForPost(post)?.label || '资讯');
   const alt = post.coverAlt || `${theme}：${post.title}`;
   const caption = REAL_IMG_RE.test(post.cover) ? (post.coverAlt || theme) : `${theme} · 编辑部制图`;
   return `<figure class="article-cover">
@@ -174,6 +174,32 @@ async function generateDailyGuide(topic, sources, dateLabel, opts) {
   return validateGuide(raw);
 }
 
+function industryTopicForDate(date) {
+  const t = new Date(`${date}T00:00:00+08:00`).getTime();
+  // 与落地手册错开 3 天，避免每日两篇非简报主题长期固定配对。
+  const dayIndex = Math.floor(t / 86400000) + 3;
+  return INDUSTRY_TOPICS[((dayIndex % INDUSTRY_TOPICS.length) + INDUSTRY_TOPICS.length) % INDUSTRY_TOPICS.length];
+}
+
+function makeIndustryPost(topic, content, date) {
+  const slug = `${date}-industry-${topic.id}`;
+  return {
+    slug,
+    title: content.title,
+    summary: content.summary,
+    date,
+    kind: 'industry',
+    tags: [...new Set(['行业观察', topic.tag, ...content.tags])].slice(0, 3),
+    url: `insights/${slug}.html`,
+  };
+}
+
+async function generateDailyIndustry(topic, sources, dateLabel, opts) {
+  if (opts.mock) return validateIndustry(loadMockIndustry(opts.root));
+  const { raw } = await generateIndustry(topic, sources, dateLabel, { log: console.log });
+  return validateIndustry(raw);
+}
+
 async function generateTheme(theme, sources, dateLabel, opts, allSources) {
   if (opts.mock) {
     const content = validateArticle(loadMockArticle(opts.root), allSources);
@@ -224,7 +250,7 @@ async function main() {
 
   const date = opts.date || todayInShanghai();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`日期格式错误：${date}`);
-  console.log(`\n=== ${SITE.name} · 每日中亚资讯（${DAILY_TARGET} 篇简报 + ${GUIDE_TARGET} 篇落地手册）· ${date} ===`);
+  console.log(`\n=== ${SITE.name} · 每日中亚资讯（${DAILY_TARGET} 篇简报 + ${GUIDE_TARGET} 篇落地手册 + ${INDUSTRY_TARGET} 篇行业观察）· ${date} ===`);
 
   const manifest = loadManifest(opts.root);
 
@@ -246,11 +272,13 @@ async function main() {
 
   const existingDaily = manifest.posts.filter((p) => p.kind === 'daily' && p.date === date);
   const existingGuides = manifest.posts.filter((p) => p.kind === 'guide' && p.date === date);
+  const existingIndustries = manifest.posts.filter((p) => p.kind === 'industry' && p.date === date);
   const dailyDone = existingDaily.length >= DAILY_TARGET;
   const guideDone = existingGuides.length >= GUIDE_TARGET;
+  const industryDone = existingIndustries.length >= INDUSTRY_TARGET;
 
-  if (dailyDone && guideDone && !opts.force) {
-    console.log(`今天已有 ${existingDaily.length} 篇简报、${existingGuides.length} 篇落地手册，跳过（使用 --force 可重写）。`);
+  if (dailyDone && guideDone && industryDone && !opts.force) {
+    console.log(`今天已有 ${existingDaily.length} 篇简报、${existingGuides.length} 篇落地手册、${existingIndustries.length} 篇行业观察，跳过（使用 --force 可重写）。`);
     prepareCovers(opts.root, manifest.posts, opts);
     for (const post of manifest.posts) {
       injectCover(opts.root, post, opts);
@@ -269,6 +297,7 @@ async function main() {
   const dateLabel = formatDateCN(date);
   const needBriefs = !dailyDone || opts.force;
   const needGuide = !guideDone || opts.force;
+  const needIndustry = !industryDone || opts.force;
 
   // 1. 来源：简报必需；手册仅作当日背景参考。
   let sources = [];
@@ -340,6 +369,21 @@ async function main() {
       newSlugs.add(post.slug);
     } catch (err) {
       console.log(`  落地手册生成失败：${err.message}`);
+    }
+  }
+
+  // 4. 生成行业观察
+  if (needIndustry) {
+    const topic = industryTopicForDate(date);
+    console.log(`生成行业观察：${topic.title}`);
+    try {
+      const content = await generateDailyIndustry(topic, sources, dateLabel, opts);
+      const post = makeIndustryPost(topic, content, date);
+      console.log(`  行业观察：${content.title}`);
+      generated.push({ post, content });
+      newSlugs.add(post.slug);
+    } catch (err) {
+      console.log(`  行业观察生成失败：${err.message}`);
     }
   }
 
